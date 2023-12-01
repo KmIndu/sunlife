@@ -1,1 +1,977 @@
+private String translateLineInCairoTerminate(String strLine, String originalLine) {
+        
+        if(originalLine.trim().equals("End Function")) {
+            String updateList =
+              "      var updateList = function() {\n"
+            + "        if(m_id == Cairo.Constants.NO_ID) { return; }\n"
+            + "        if(m_listController == null) { return; }\n\n"
+            + "        if(m_isNew) {\n"
+            + "          m_listController.addLeave(m_id, m_branchId);\n"
+            + "        }\n"
+            + "        else {\n"
+            + "          m_listController.refreshBranch(m_id, m_branchId);\n"
+            + "        }\n"
+            + "      };\n\n"
+            + "      self.terminate = function() {\n\n"
+            + "        m_editing = false;\n\n"
+            + "        try {\n"
+            + "          if(m_listController != null) {\n"
+            + "            updateList();\n"
+            + "            m_listController.removeEditor(self);\n"
+            + "          }\n"
+            + "        }\n"
+            + "        catch (ignored) {\n"
+            + "          Cairo.logError('Error in terminate', ignored);\n"
+            + "        }\n"
+            + "      };\n\n"
+            + "      self.getPath = function() {\n"
+            + "        return \"#general/" + m_javaClassName.substring(1).toLowerCase() + "/\" + m_id.toString();\n"
+            + "      };\n\n"
+            + "      self.getEditorName = function() {\n"
+            + "        var id = m_id ? m_id.toString() : \"N\" + (new Date).getTime().toString();\n"
+            + "        return \"" + m_javaClassName.substring(1).toLowerCase() + "\" + id;\n"
+            + "      };\n\n";
+        
+            
+            return updateList;
+        }
+        else {
+            return "";
+        }
+    }
+    
+    private String translateLineInCairoValidate(String strLine) {
+        if (strLine.trim().equals("return true;"))
+            return strLine.replaceAll("return true;", "return Cairo.Promises.resolvedPromise(true);");
+        else if (strLine.trim().equals("return null;"))
+            return "";
+        else if (G.beginLike(strLine.trim(), "cWindow.msgInfo(")) {
+            strLine = strLine.replaceAll("cWindow.msgInfo\\(","return Cairo.Modal.showInfo(");
+            strLine = strLine.replaceAll("\\);", ").then(function() {return false;});");
+            return strLine;
+        }
+        else
+            return strLine.replace("C_ValidateRow", "Cairo.Constants.VALIDATE_ROW_FUNCTION");
+    }
+    
+    private String translateLineInCairoValidateItems(String strLine) {
+        if (strLine.trim().equals("return true;"))
+            return strLine.replaceAll("return true;", "return Cairo.Promises.resolvedPromise(true);");
+        else if (strLine.trim().equals("return null;"))
+            return "";
+        else if (strLine.trim().equals("var strRow = null;"))
+            return "";
+        else if (strLine.trim().equals("strRow = \" (Fila \"+ rowIndex.toString()+ \")\";"))
+            return getTabs() + "var strRow = \" (Row: \" + rowIndex.toString() + \")\";\n";
+        else if (G.beginLike(strLine.trim(), "cWindow.msgInfo(")) {
+            strLine = strLine.replaceAll("cWindow.msgInfo\\(","return Cairo.Modal.showInfo(");
+            strLine = strLine.replaceAll("\\);", ").then(function() {return false;});");
+            return strLine;
+        }
+        else
+            return strLine.replace("C_ValidateRow", "Cairo.Constants.VALIDATE_ROW_FUNCTION");
+    }
+    
+    private String translateLineInCairoIsEmptyRow(String strLine) {
+        if (strLine.trim().equals("var bRowIsEmpty = null;"))
+            return "";
+        else if (strLine.trim().equals("bRowIsEmpty = true;"))
+            return getTabs() + "var bRowIsEmpty = true;\n";
+        else
+            return strLine;
+    }    
 
+    String[] lines = {
+        "var abmGen = null;",
+        "abmGen = m_dialog;"
+    };    
+    private String translateLineInCairoMessageEx(String strLine) {
+        String trimmedLine = strLine.trim();
+        for (int i = 0; i < lines.length; i++) {
+            if (trimmedLine.equals(lines[i]) ) {
+                return "";
+            }        
+        }
+        
+        if (G.beginLike(trimmedLine, "return _rtn;"))
+            return strLine.replaceAll("return _rtn;", "return Cairo.Promises.resolvedPromise(_rtn);");        
+        else
+            return strLine.replaceAll("abmGen", "m_dialog");
+    }
+    
+    private String translateFunctionNameToCairo(String name) {
+        for (int i=0; i < m_cairoNames.length -1; i += 2) {
+            if(name.equals(m_cairoNames[i])) {
+                name = m_cairoNames[i+1];
+                break;
+            }
+        }
+        
+        return name;
+    }
+    
+    private String translateVarNameToCairo(String name) {
+        for (int i=0; i < m_cairoVarNames.length -1; i += 2) {
+            if(name.equals(m_cairoVarNames[i])) {
+                name = m_cairoVarNames[i+1];
+                break;
+            }
+        }
+        
+        return name;
+    }    
+    
+    private Boolean functionIsPublicInterface(String name) {
+        for (int i=0; i < m_cairoNames.length -1; i += 2) {
+            if(name.equals(m_cairoNames[i])) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+    
+    private String replaceCairoNames(String strLine) {
+        strLine = strLine.replaceAll("mPublic.gDB", "Cairo.Database");
+        strLine = strLine.replaceAll("Constantes.cSC", "Constantes.");
+        strLine = strLine.replaceAll("Constantes.cST", "Constantes.");
+        strLine = strLine.replaceAll("mConstantes", "Cairo.Constants");
+        strLine = strLine.replaceAll("mGeneralConstantes", "Cairo.General.Constants");
+        strLine = strLine.replaceAll("csConstIds.cSNO_ID", "Cairo.Constants.NO_ID");
+        strLine = strLine.replaceAll("csETablasGeneral.cS", "Cairo.Tables.");
+        strLine = strLine.replaceAll("getProperties\\(\\).item\\(\\).item\\(", "getProperties().item(");        
+        strLine = strLine.replaceAll("self.getNombre", "self.getName");
+        strLine = strLine.replaceAll("self.getCodigo", "self.getCode");
+        strLine = strLine.replaceAll("cError.mngError\\(VBA.ex,", "Cairo.manageErrorEx(ex.message,");
+        strLine = strLine.replaceAll("cSecurity.", "Cairo.Security.");
+        strLine = strLine.replaceAll("mPublic.gAppName", "Cairo.appName");
+        strLine = strLine.replaceAll("Cairo.Constants.c_strCodigo", "Cairo.Constants.CODE_LABEL");
+        strLine = strLine.replaceAll("Cairo.Constants.c_strActivo", "Cairo.Constants.ACTIVE_LABEL");
+        strLine = strLine.replaceAll("Cairo.Constants.ACTIVO", "Cairo.Constants.ACTIVE");
+        strLine = strLine.replaceAll("Cairo.Constants.c_strDescrip", "Cairo.Constants.DESCRIPTION_LABEL");
+        strLine = strLine.replaceAll("Cairo.Constants.c_strNombre", "Cairo.Constants.NAME_LABEL");
+        strLine = strLine.replaceAll("\\(k_", "(K_");
+        strLine = strLine.replaceAll("ABM_MSG.m", "Dialogs.Message.M");
+        strLine = strLine.replaceAll(" case  ", " case ");
+        strLine = strLine.replaceAll("Cairo.Constants.self.val\\(", "Cairo.Util.val(");
+        strLine = strLine.replaceAll("cUtil.valEmpty\\(", "Cairo.Util.valEmpty(");
+        
+        strLine = replaceIdentifierToLowerCase(strLine, "csTypes.cS", "Cairo.Constants.Types.");
+        
+        strLine = strLine.replaceAll("Cairo.Constants.c_DebeIndicarNombre", "Cairo.Constants.MUST_SET_A_NAME");
+        strLine = strLine.replaceAll("Cairo.Constants.c_DebeIndicarCodigo", "Cairo.Constants.MUST_SET_A_CODE");
+        strLine = strLine.replaceAll("c_get_codigo_from_id", "Cairo.Constants.GET_CODE_FROM_ID");
+        strLine = strLine.replaceAll("\\(C_C\\+", "(Cairo.Constants.COPY_OF +");
+        strLine = strLine.replaceAll("C_ShowDocDigital,", "Cairo.Constants.SHOW_DOCUMENTS_FUNCTION,");
+        strLine = strLine.replaceAll("LNGGetText\\(", "Cairo.Language.getText(");
+        strLine = strLine.replaceAll("CSKernelClient2.cUtil.showHelp\\(abmGen.getHWnd\\(\\), ", "Cairo.Documentation.show(");
+        
+        strLine = replaceIdentifier(strLine, "csPreGNew", "Cairo.Security.Actions.General.NEW_");
+        strLine = replaceIdentifier(strLine, "csPreGEdit", "Cairo.Security.Actions.General.EDIT_");
+        strLine = replaceIdentifier(strLine, "csPreGList", "Cairo.Security.Actions.General.LIST_");
+        strLine = replaceIdentifier(strLine, "csPreGDelete", "Cairo.Security.Actions.General.DELETE_");
+        
+        strLine = strLine.replaceAll("C_EditGenericDelete,", "Cairo.Constants.DELETE_FUNCTION,");
+        strLine = strLine.replaceAll("m_objAbm", "m_dialog");
+        strLine = strLine.replaceAll("setHelpId", "setSelectId");
+        strLine = strLine.replaceAll("\"\\+ \"", "");
+        strLine = strLine.replaceAll("m_dialog.setTitle2\\(", "m_dialog.setTitle(");
+        strLine = strLine.replaceAll("setPropertyType\\(", "setType(");
+        strLine = strLine.replaceAll("setSubType\\(csp", "setSubType(Dialogs.PropertySubType.");
+        strLine = strLine.replaceAll("setType\\(csp", "setType(Dialogs.PropertyType.");
+        strLine = strLine.replaceAll("Dialogs.PropertyType.Help", "Dialogs.PropertyType.select");
+        strLine = strLine.replaceAll("Dialogs.PropertyType.Text", "Dialogs.PropertyType.text");
+        strLine = strLine.replaceAll("Dialogs.PropertyType.Numeric", "Dialogs.PropertyType.numeric");
+        strLine = strLine.replaceAll("Dialogs.PropertyType.Option", "Dialogs.PropertyType.option");
+        strLine = strLine.replaceAll("Dialogs.PropertyType.Check", "Dialogs.PropertyType.check");
+        strLine = strLine.replaceAll("Dialogs.PropertyType.Password", "Dialogs.PropertyType.password");
+        strLine = strLine.replaceAll("Dialogs.PropertyType.Grid", "Dialogs.PropertyType.grid");
+        strLine = strLine.replaceAll("Dialogs.PropertyType.Date", "Dialogs.PropertyType.date");
+        strLine = strLine.replaceAll("Dialogs.PropertyType.Button", "Dialogs.PropertyType.button");
+        strLine = strLine.replaceAll("Dialogs.PropertyType.Toolbar", "Dialogs.PropertyType.toolbar");
+        strLine = strLine.replaceAll("Dialogs.PropertyType.Image", "Dialogs.PropertyType.image");
+        strLine = strLine.replaceAll("Dialogs.PropertyType.ProgressBar", "Dialogs.PropertyType.progressBar");
+        strLine = strLine.replaceAll("Dialogs.PropertyType.Label", "Dialogs.PropertyType.label");
+        strLine = strLine.replaceAll("Dialogs.PropertyType.Title", "Dialogs.PropertyType.title");
+        strLine = strLine.replaceAll("Dialogs.PropertyType.Description", "Dialogs.PropertyType.description");
+        strLine = strLine.replaceAll("Dialogs.PropertyType.File", "Dialogs.PropertyType.file");
+        strLine = strLine.replaceAll("Dialogs.PropertyType.Folder", "Dialogs.PropertyType.folder");
+        strLine = strLine.replaceAll("Dialogs.PropertyType.List", "Dialogs.PropertyType.list");
+        strLine = strLine.replaceAll("Dialogs.PropertyType.Time", "Dialogs.PropertyType.time");
+        strLine = strLine.replaceAll("Dialogs.PropertySubType.Memo", "Dialogs.PropertySubType.memo");
+        strLine = strLine.replaceAll("Dialogs.PropertySubType.Money", "Dialogs.PropertySubType.money");
+        strLine = strLine.replaceAll("Dialogs.PropertySubType.integer", "Dialogs.PropertySubType.integer");
+        strLine = strLine.replaceAll("Dialogs.PropertySubType.Double", "Dialogs.PropertySubType.double");
+        strLine = strLine.replaceAll("Dialogs.PropertySubType.Percent", "Dialogs.PropertySubType.percentage");
+        strLine = strLine.replaceAll("Dialogs.PropertySubType.Mask", "Dialogs.PropertySubType.mask");
+        strLine = strLine.replaceAll("Dialogs.PropertySubType.CUIT", "Dialogs.PropertySubType.taxId");
+        strLine = strLine.replaceAll("Dialogs.PropertySubType.TextButton", "Dialogs.PropertySubType.textButton");
+        strLine = strLine.replaceAll("Dialogs.PropertySubType.TextButtonEx", "Dialogs.PropertySubType.textButtonEx");
+        strLine = strLine.replaceAll("setValue\\(Integer.parseInt\\(m_active\\)\\);", "setValue(m_active === true ? 1 : 0);");
+        strLine = strLine.replaceAll("elem.setTable\\(Cairo.Tables.", "elem.setSelectTable(Cairo.Tables.");
+        strLine = strLine.replaceAll(".securityCanAccess\\(", ".hasPermissionTo(");
+        strLine = strLine.replaceAll(".getHelpId\\(\\)", ".getSelectId()");
+        strLine = strLine.replaceAll("csConstIds.cSNEW", "Cairo.Constants.NEW_ID");
+        strLine = strLine.replaceAll("register.setID", "register.setId");
+        strLine = strLine.replaceAll("C_EditGenericEdit", "Cairo.Constants.EDIT_FUNCTION");
+        strLine = strLine.replaceAll("cIABMClientGrid_ValidateRow", "validateRow");
+        strLine = strLine.replaceAll("cIABMClientGrid_NewRow", "newRow");
+        strLine = strLine.replaceAll("cIABMClientGrid_ListAdHock", "listAdHock");
+        strLine = strLine.replaceAll("cIABMClientGrid_ColumnAfterUpdate", "columnAfterUpdate");
+        strLine = strLine.replaceAll("cIABMClientGrid_ColumnClick", "columnClick");
+        strLine = strLine.replaceAll("cIABMClientGrid_DblClick", "dblClick");
+        strLine = strLine.replaceAll("cIABMClientGrid_IsEmptyRow", "isEmptyRow");
+        
+        strLine = strLine.replaceAll("cIABMClientGrid_ColumnAfterEdit", "columnAfterEdit");
+        strLine = strLine.replaceAll("cIABMClientGrid_ColumnBeforeEdit", "columnBeforeEdit");
+        strLine = strLine.replaceAll("cIABMClientGrid_ColumnButtonClick", "columnButtonClick");
+        strLine = strLine.replaceAll("cIABMClientGrid_ColumnCancelEdit", "isEmptyRow");
+        strLine = strLine.replaceAll("cIABMClientGrid_DeleteRow", "deleteRow");
+        
+        
+        strLine = strLine.replaceAll("setHelpFilter", "setSelectFilter");
+        strLine = strLine.replaceAll("mPublic.gFormatDecCantidad", "Cairo.Settings.getQuantityDecimalsFormat()");
+        
+        strLine = strLine.replaceAll("csE_CuentaGrupoTipo", "Cairo.General.Constants.AccountGroupType");
+        strLine = strLine.replaceAll("cSECUECTIPOPRODUCTOVENTA", "productForSale");
+        strLine = strLine.replaceAll("cSECUECTIPOPRODUCTOCOMPRA", "productForPurchase");
+        strLine = strLine.replaceAll("cSECUECTIPOACREEDOR", "creditor");
+        strLine = strLine.replaceAll("cSECUECTIPODEUDOR", "debtor");
+        strLine = strLine.replaceAll("cSECUECTIPODEBITOAUTOMATICO", "directDebit");
+        strLine = strLine.replaceAll("cSECUECTIPOFONDOFIJO", "pettyCashFund");
+        strLine = strLine.replaceAll("c_TiFilterVenta", "Cairo.General.Constants.filterForSales");
+        strLine = strLine.replaceAll("c_TiFilterCompra", "Cairo.General.Constants.filterForPurchase");
+        strLine = strLine.replaceAll("setGridAdd", "setGridAddEnabled");
+        strLine = strLine.replaceAll("setGridEdit", "setGridEditEnabled");
+        strLine = strLine.replaceAll("setGridRemove", "setGridRemoveEnabled");
+        
+        
+        strLine = strLine.replaceAll(".ToLower\\(\\)", ".toLowerCase()");
+        strLine = strLine.replaceAll(".ToUpper\\(\\)", ".toUpperCase()");
+        strLine = strLine.replaceAll(".ToString\\(\\)", ".toString()");
+        strLine = strLine.replaceAll("RTrim\\$\\(", "Cairo.String.rtrim(");
+        strLine = strLine.replaceAll("RTrim\\(", "Cairo.String.rtrim(");
+        strLine = strLine.replaceAll("LTrim\\$\\(", "Cairo.String.ltrim(");
+        strLine = strLine.replaceAll("LTrim\\(", "Cairo.String.ltrim(");
+        strLine = strLine.replaceAll("Trim\\$\\(", "\\$.trim(");
+        strLine = strLine.replaceAll("Trim\\(", "\\$.trim(");
+        strLine = strLine.replaceAll("CInt\\(b", "Cairo.Util.boolToInt(b");
+        strLine = strLine.replaceAll("cABMUtil.pCell\\(", "Dialogs.cell(");
+        strLine = strLine.replaceAll("cell.getID\\(\\)", "cell.getId()");
+        strLine = strLine.replaceAll("\\(csTalonario\\)", "\\(Cairo.Tables.TALONARIO\\)");
+        strLine = strLine.replaceAll("getHelpValueProcess", "getSelectIntValue");
+        strLine = strLine.replace("register.setId((Cairo.Util.val(cell.getValue()) > 0) ? Cairo.Util.val(cell.getValue()) : Cairo.Constants.NEW_ID));", "register.setId((Cairo.Util.val(cell.getValue()) > 0) ? Cairo.Util.val(cell.getValue()) : Cairo.Constants.NEW_ID);");
+        
+        return strLine;
+    }
+    
+    private String replaceIdentifierCamel(String identifier) {
+        String newIdentifier = "";
+        boolean upperFound = false;
+        boolean firstUpper = true;
+        String x = "";
+        for (int k = 0; k < identifier.length(); k++) {
+            char z = identifier.charAt(k);                            
+            if (Character.isUpperCase(z)) {
+                upperFound = true;
+                x += z;
+            }
+            else {
+                if (upperFound) {
+                    upperFound = false;
+                    if (firstUpper) {
+                        firstUpper = false;
+                    }
+                    else {
+                        newIdentifier += "_";
+                    }
+                    newIdentifier += x;
+                    x = "";
+                }
+                newIdentifier += z;
+            }            
+        }
+        if (!x.isEmpty()) {
+            newIdentifier += "_" + x;
+        }
+        return newIdentifier;
+    }
+    
+    private String replaceIdentifier(String strLine, String toSearch, String replaceWith) {
+        int i;
+        do {
+            i = strLine.toLowerCase().indexOf(toSearch.toLowerCase());
+            if (i >= 0) {
+                
+                int t, r;
+                t = r = i + toSearch.length();
+
+                int s = strLine.length();
+                while (t <= s) {                    
+                    char c = strLine.charAt(t);
+                    if (!(Character.isLetter(c) 
+                            || Character.isDigit(c)
+                            || c == '_')) {
+                        strLine = strLine.substring(0, i) + replaceWith + strLine.substring(r, t).toUpperCase() + strLine.substring(t, s); 
+                        break;
+                    }                        
+                    t++;
+                }
+            }
+        } while (i >= 0);
+        return strLine;
+    }
+    
+    private String replaceIdentifierToLowerCase(String strLine, String toSearch, String replaceWith) {
+        int i;
+        do {
+            i = strLine.toLowerCase().indexOf(toSearch.toLowerCase());
+            if (i >= 0) {
+                
+                int t, r;
+                t = r = i + toSearch.length();
+
+                int s = strLine.length();
+                while (t <= s) {                    
+                    char c = strLine.charAt(t);
+                    if (!(Character.isLetter(c) 
+                            || Character.isDigit(c)
+                            || c == '_')) {
+                        strLine = strLine.substring(0, i) + replaceWith + strLine.substring(r, t).toLowerCase() + strLine.substring(t, s); 
+                        break;
+                    }                        
+                    t++;
+                }
+            }
+        } while (i >= 0);
+        return strLine;
+    }
+    
+    private String addJavaScriptHeader() {
+        String header = "(function() {\n  \"use strict\";\n\n";
+        header += "  Cairo.module(\"" + m_javaClassName.substring(1) + ".Edit\", function(Edit, Cairo, Backbone, Marionette, $, _) {\n\n";
+        header += "    var createObject = function() {\n\n";
+        header += "      var self = {};\n\n";
+        header += "      var Dialogs = Cairo.Dialogs;\n";
+        m_tabCount += 2;
+        return header;
+    };
+    
+    private String addJavaScriptFooter() {
+        String footer = "\n      return self;\n";
+        footer += "    };\n\n";
+        footer += "    Edit.Controller = { getEditor: createObject };\n\n";
+        footer += "  });\n\n";
+        footer += getCairoTreeListController();
+        footer += "\n\n}());";
+        return footer;
+    }
+
+    String[] discardedLines = {
+        "//--------------------------------------------------------------------------------\n",
+        "// notas:\n",
+        "// api win32\n",
+        "// constantes\n",
+        "// estructuras\n",
+        "// funciones\n",
+        "// estructuras\n",
+        "// variables privadas\n",
+        "// propiedades publicas\n",
+        "// propiedades privadas\n",
+        "// funciones publicas\n",
+        "// Implementacion de cIABMClient\n",
+        "// Implementacion de cIEditGeneric\n",
+        "// construccion - destruccion\n",
+        "//Option Explicit\n",
+        "var m_host;\n"
+    };
+    String[] dicardBeginLikeLines = {
+        "//  With m_ObjAbm.Properties(csc",
+        "//    .Value = C_CopiaDe & .Value",
+        "//  End With",
+        "// Este objeto puede no cumplir con la interfaz esperada, asi que si hay un error no",
+        "// le doy bola",
+        "fields.setHaveLastUpdate(",
+        "fields.setHaveWhoModify(",
+        "// Error saving ",
+        "abmObj.setBSendRefresh",
+        "o.setDontResizeHeight(",
+        "o.setDontResize("
+    };
+    private String removeCairoLines(String strLine) {
+        String trimmedLine = G.ltrim(strLine);
+        for (int i=0; i < discardedLines.length; i += 1) {
+            if (trimmedLine.equals(discardedLines[i])) {
+                strLine = "";
+                break;
+            }
+        }
+        
+        if (G.beginLike(strLine.trim(), "*Implements ")) {
+            strLine = "";
+        }
+        
+        for (int i=0; i < dicardBeginLikeLines.length; i += 1) {
+            if (G.beginLike(trimmedLine, dicardBeginLikeLines[i])) {
+                strLine = "";
+                break;
+            }
+        }
+        
+        return strLine;
+    }
+
+    String[] lastReplaceStrings = {
+            "if \\(", "if("
+    };        
+    private String applyLastReplace(String strLine) {        
+        for (int i=0; i < lastReplaceStrings.length -1; i += 2) {
+            strLine = strLine.replaceAll(lastReplaceStrings[i], lastReplaceStrings[i+1]);
+        }
+        
+        return strLine;
+    }
+    
+    String[] discardBegindAndEndLikeLines = {
+            "m_dialog.showValue(m_objAbm.getProperties().item(Cairo.General.Constants.", "NOMBRE));\n"
+    };    
+    private String removeCairoLinesAfterReplace(String strLine) {
+        String trimmedLine = G.ltrim(strLine);        
+        for (int i=0; i < discardBegindAndEndLikeLines.length -1; i += 2) {
+            if (G.beginLike(trimmedLine, discardBegindAndEndLikeLines[i])) {
+                if (G.endLike(trimmedLine, discardBegindAndEndLikeLines[i+1])) {
+                    strLine = "";
+                    break;
+                }
+            }
+        }
+        
+        return strLine;        
+    }
+    
+    private String cairoTreeListControllerGetPluralName(String name) {
+        switch (name) {
+            case "Proveedor":
+                name = "Proveedores";
+            default:
+                name += "s";                
+        }
+        return name;
+    }
+    private String cairoTreeListControllerGetIdentifierName(String name) {
+        switch (name) {
+            default:
+                name = name.toLowerCase();
+        }
+        return name;
+    }
+    private String cairoTreeListControllerGetlowerName(String name) {
+        switch (name) {
+            default:
+                name = name.toLowerCase();
+        }
+        return name;
+    }
+    private String cairoTreeListControllerGetIdentifierPluralName(String name) {
+        switch (name) {
+            case "Proveedor":
+                name = "proveedores";
+            default:
+                name = name.toLowerCase() + "s";                
+        }
+        return name;
+    }
+    private String cairoTreeListControllerGetTableName(String name) {
+        switch (name) {
+            case "Proveedor":
+                name = "PROVEEDOR";
+            default:
+                name = name.toUpperCase();                
+        }
+        return name;
+    }    
+    
+    private String getCairoTreeListController() {
+        String moduleName = m_javaClassName.substring(1);
+        String pluralName = cairoTreeListControllerGetPluralName(moduleName); //"Proveedores";
+        String identifierName = cairoTreeListControllerGetIdentifierName(moduleName); //"proveedor";
+        String upperModuleName = moduleName.toUpperCase();
+        String lowerName = cairoTreeListControllerGetlowerName(moduleName); //"proveedor";
+        String identifierPluralName = cairoTreeListControllerGetIdentifierPluralName(moduleName); //"proveedores";
+        String tableName = cairoTreeListControllerGetTableName(moduleName); //"PROVEEDOR";
+        
+        String strLine = 
+            "  Cairo.module(\"" + moduleName + ".List\", function(List, Cairo, Backbone, Marionette, $, _) {\n"
+          + "    List.Controller = {\n"
+          + "      list: function() {\n"
+          + "\n"
+          + "        var self = this;\n"
+          + "\n"
+          + "        /*\n"
+          + "         this function will be called by the tab manager every time the\n"
+          + "         view must be created. when the tab is not visible the tab manager\n"
+          + "         will not call this function but only make the tab visible\n"
+          + "         */\n"
+          + "        var createTreeDialog = function(tabId) {\n"
+          + "\n"
+          + "          var editors = Cairo.Editors." + identifierName + "Editors || Cairo.Collections.createCollection(null);\n"
+          + "          Cairo.Editors." + identifierName + "Editors = editors;\n"
+          + "\n"
+          + "          // ListController properties and methods\n"
+          + "          //\n"
+          + "          self.entityInfo = new Backbone.Model({\n"
+          + "            entitiesTitle: \"" + pluralName + "\",\n"
+          + "            entityName: \"" + identifierName + "\",\n"
+          + "            entitiesName: \"" + identifierPluralName + "\"\n"
+          + "          });\n"
+          + "\n"
+          + "          self.showBranch = function(branchId) {\n"
+          + "            Cairo.log(\"Loading nodeId: \" + branchId);\n"
+          + "            Cairo.Tree.List.Controller.listBranch(branchId, Cairo.Tree.List.Controller.showItems, self);\n"
+          + "          };\n"
+          + "\n"
+          + "          self.addLeave = function(id, branchId) {\n"
+          + "            try {\n"
+          + "              Cairo.Tree.List.Controller.addLeave(branchId, id, self);\n"
+          + "            }\n"
+          + "            catch(ignore) {\n"
+          + "              Cairo.log(\"Error when adding this item to the branch\\n\\n\" + ignore.message);\n"
+          + "            }\n"
+          + "          };\n"
+          + "\n"
+          + "          self.refreshBranch = function(id, branchId) {\n"
+          + "            try {\n"
+          + "              Cairo.Tree.List.Controller.refreshBranchIfActive(branchId, id, self);\n"
+          + "            }\n"
+          + "            catch(ignore) {\n"
+          + "              Cairo.log(\"Error when refreshing a branch\\n\\n\" + ignore.message);\n"
+          + "            }\n"
+          + "          };\n"
+          + "\n"
+          + "          var getIndexFromEditor = function(editor) {\n"
+          + "            var count = editors.count();\n"
+          + "            for(var i = 0; i < count; i += 1) {\n"
+          + "              if(editors.item(i).editor === editor) {\n"
+          + "                return i;\n"
+          + "              }\n"
+          + "            }\n"
+          + "            return -1;\n"
+          + "          };\n"
+          + "\n"
+          + "          self.removeEditor = function(editor) {\n"
+          + "            var index = getIndexFromEditor(editor);\n"
+          + "            if(index >= 0) {\n"
+          + "              editors.remove(index);\n"
+          + "            }\n"
+          + "          };\n"
+          + "\n"
+          + "          var getKey = function(id) {\n"
+          + "            if(id === Cairo.Constants.NO_ID) {\n"
+          + "              return \"new-id:\" + (new Date).getTime().toString()\n"
+          + "            }\n"
+          + "            else {\n"
+          + "              return \"k:\" + id.toString();\n"
+          + "            }\n"
+          + "          };\n"
+          + "\n"
+          + "          self.updateEditorKey = function(editor, newId) {\n"
+          + "            var index = getIndexFromEditor(editor);\n"
+          + "            if(index >= 0) {\n"
+          + "              var editor = editors.item(index);\n"
+          + "              editors.remove(index);\n"
+          + "              var key = getKey(newId);\n"
+          + "              editors.add(editor, key);\n"
+          + "            }\n"
+          + "          };\n"
+          + "\n"
+          + "          self.edit = function(id, treeId, branchId) {\n"
+          + "            var key = getKey(id);\n"
+          + "            if(editors.contains(key)) {\n"
+          + "              editors.item(key).dialog.showDialog();\n"
+          + "            }\n"
+          + "            else {\n"
+          + "              var editor = Cairo." + moduleName + ".Edit.Controller.getEditor();\n"
+          + "              var dialog = Cairo.Dialogs.Views.Controller.newDialog();\n"
+          + "\n"
+          + "              editor.setTree(self);\n"
+          + "              editor.setDialog(dialog);\n"
+          + "              editor.setTreeId(treeId);\n"
+          + "              editor.setBranchId(branchId);\n"
+          + "              editor.edit(id);\n"
+          + "\n"
+          + "              editors.add({editor: editor, dialog: dialog}, key);\n"
+          + "            }\n"
+          + "          };\n"
+          + "\n"
+          + "          self.destroy = function(id, treeId, branchId) {\n"
+          + "            if(!Cairo.Security.hasPermissionTo(Cairo.Security.Actions.General.DELETE_" + upperModuleName + ")) {\n"
+          + "              return Cairo.Promises.resolvedPromise(false);\n"
+          + "            }\n"
+          + "            var apiPath = Cairo.Database.getAPIVersion();\n"
+          + "            return Cairo.Database.destroy(apiPath + \"general/" + identifierName + "\", id, Cairo.Constants.DELETE_FUNCTION, \"" + moduleName + "\").success(\n"
+          + "              function() {\n"
+          + "                try {\n"
+          + "                  var key = getKey(id);\n"
+          + "                  if(editors.contains(key)) {\n"
+          + "                    editors.item(key).dialog.closeDialog();\n"
+          + "                  }\n"
+          + "                }\n"
+          + "                catch(ignore) {\n"
+          + "                  Cairo.log('Error closing dialog after delete');\n"
+          + "                }\n"
+          + "                return true;\n"
+          + "              }\n"
+          + "            );\n"
+          + "          };\n"
+          + "\n"
+          + "          // progress message\n"
+          + "          //\n"
+          + "          Cairo.LoadingMessage.show(\"" + pluralName + "\", \"Loading " + lowerName + " from Crowsoft Cairo server.\");\n"
+          + "\n"
+          + "          // create the tree region\n"
+          + "          //\n"
+          + "          Cairo.addRegions({ " + identifierName + "TreeRegion: tabId });\n"
+          + "\n"
+          + "          // create the dialog\n"
+          + "          //\n"
+          + "          Cairo.Tree.List.Controller.list(\n"
+          + "            Cairo.Tables." + tableName + ",\n"
+          + "            new Cairo.Tree.List.TreeLayout({ model: self.entityInfo }),\n"
+          + "            Cairo." + identifierName + "TreeRegion,\n"
+          + "            self);\n"
+          + "\n"
+          + "        };\n"
+          + "\n"
+          + "        var showTreeDialog = function() {\n"
+          + "          Cairo.Tree.List.Controller.showTreeDialog(self);\n"
+          + "        };\n"
+          + "\n"
+          + "        var closeTreeDialog = function() {\n"
+          + "\n"
+          + "        }\n"
+          + "\n"
+          + "        // create the tab\n"
+          + "        //\n"
+          + "        Cairo.mainTab.showTab(\"" + pluralName + "\", \"" + identifierName + "TreeRegion\", \"#general/" + identifierPluralName + "\", createTreeDialog, closeTreeDialog, showTreeDialog);\n"
+          + "\n"
+          + "      }\n"
+          + "    };\n"
+          + "  });\n";                
+        return strLine;
+    }
+    
+    // server: SCALA CODE
+
+    /*
+     
+     * CONTROLLER
+     
+     */
+    
+    private static final String m_controllerImports = 
+            "import controllers._\n"
+          + "import play.api.mvc._\n"
+          + "import play.api.data._\n"
+          + "import play.api.data.Forms._\n"
+          + "import actions._\n"
+          + "import play.api.Logger\n"
+          + "import play.api.libs.json._\n"
+          + "import models.cairo.modules.general._\n"
+          + "import models.cairo.system.security.CairoSecurity\n"
+          + "import models.cairo.system.database.DBHelper\n";
+
+    private String m_controllerClassData = "case class XxxzData(\n              id: Option[Int],\nCASE-CLASS-FIELDS\n              )";
+    
+    private String m_controllerObject = 
+          "object Xxxzs extends Controller with ProvidesUser {\n\n"
+            
+        + "  val xxxzForm = Form(\n"
+        + "    mapping(\n"
+        + "[FORM-DATA]"   
+        + "  )(XxxzData.apply)(XxxzData.unapply))\n\n"   
+
+        + "  implicit val xxxzWrites = new Writes[Xxxz] {\n"
+        + "    def writes(xxxz: Xxxz) = Json.obj(\n"
+        + "[WRITES-DATA]"   
+        + "    )\n"   
+        + "  }\n\n"   
+            
+        + "  def get(id: Int) = GetAction { implicit request =>\n"
+        + "    LoggedIntoCompanyResponse.getAction(request, CairoSecurity.hasPermissionTo(S.LIST_XXXZ), { user =>\n"
+        + "      Ok(Json.toJson(Xxxz.get(user, id)))\n"
+        + "    })\n"
+        + "  }\n\n"
+
+        + "  def update(id: Int) = PostAction { implicit request =>\n"
+        + "    Logger.debug(\"in xxxzs.update\")\n"
+        + "    xxxzForm.bindFromRequest.fold(\n"
+        + "      formWithErrors => {\n"
+        + "        Logger.debug(s\"invalid form: ${formWithErrors.toString}\")\n"
+        + "        BadRequest\n"
+        + "      },\n"
+        + "      xxxz => {\n"
+        + "        Logger.debug(s\"form: ${xxxz.toString}\")\n"
+        + "        LoggedIntoCompanyResponse.getAction(request, CairoSecurity.hasPermissionTo(S.EDIT_XXXZ), { user =>\n"
+        + "          Ok(\n"
+        + "            Json.toJson(\n"
+        + "              Xxxz.update(user,\n" 
+        + "                Xxxz(\n"
+        + "                       id,\n"
+        + "[UPDATE-PARAM-LIST]\n"
+        + "                ))))\n"
+        + "        })\n"
+        + "      }\n"
+        + "    )\n"
+        + "  }\n\n"
+
+        + "  def create = PostAction { implicit request =>\n"
+        + "    Logger.debug(\"in xxxzs.create\")\n"
+        + "    xxxzForm.bindFromRequest.fold(\n"
+        + "      formWithErrors => {\n"
+        + "        Logger.debug(s\"invalid form: ${formWithErrors.toString}\")\n"
+        + "        BadRequest\n"
+        + "      },\n"
+        + "      xxxz => {\n"
+        + "        Logger.debug(s\"form: ${xxxz.toString}\")\n"
+        + "        LoggedIntoCompanyResponse.getAction(request, CairoSecurity.hasPermissionTo(S.NEW_XXXZ), { user =>\n"
+        + "          Ok(\n"
+        + "            Json.toJson(\n"
+        + "              Xxxz.create(user,\n"
+        + "                Xxxz(\n"
+        + "[CREATE-PARAM-LIST]\n"
+        + "                ))))\n"
+        + "        })\n"
+        + "      }\n"
+        + "    )\n"
+        + "  }\n\n"
+
+        + "  def delete(id: Int) = PostAction { implicit request =>\n"
+        + "    Logger.debug(\"in xxxzs.delete\")\n"
+        + "    LoggedIntoCompanyResponse.getAction(request, CairoSecurity.hasPermissionTo(S.DELETE_XXXZ), { user =>\n"
+        + "      Xxxz.delete(user, id)\n"
+        + "      // Backbonejs requires at least an empty json object in the response\n"
+        + "      // if not it will call errorHandler even when we responded with 200 OK :P\n"
+        + "      Ok(JsonUtil.emptyJson)\n"
+        + "    })\n"
+        + "  }\n\n"            
+        + "}";            
+
+    private String m_caseClassDataFields = "";
+    private String m_caseClassPrefix = "";
+    private String m_caseClassDataLastField = "";
+    private boolean m_discardProperty = false;
+    private String m_discardedProperties = "";
+    private boolean m_setIdFound = false;
+    
+    private void writeControllerClassData(String strLine) {
+      if (strLine.contains("var elem = properties.add(null")) {
+         m_setValueFound = false;
+         if (strLine.contains("var elem = properties.add(null, Cairo.General.Constants.")) {
+            m_discardProperty = false; 
+            m_setIdFound = false;
+                    
+            m_caseClassDataLastField = strLine.trim().replace("var elem = properties.add(null, Cairo.General.Constants.", "");
+            m_caseClassDataLastField = m_caseClassDataLastField.substring(0, m_caseClassDataLastField.indexOf(")"));
+
+            if (m_caseClassPrefix.isEmpty()) {
+                m_caseClassPrefix = m_caseClassDataLastField.substring(0, m_caseClassDataLastField.indexOf("_") + 1);
+            }
+
+            if (m_caseClassDataLastField.startsWith(m_caseClassPrefix)) {
+              m_caseClassDataLastField = m_caseClassDataLastField.substring(m_caseClassPrefix.length());
+            }
+
+            m_caseClassDataLastField = toCamel(m_caseClassDataLastField);
+
+            m_caseClassDataFields += "              " + m_caseClassDataLastField + ": ";
+         }
+         else if (strLine.contains("var elem = properties.add(null, Cairo.Constants.ACTIVE")) {
+             m_discardProperty = false;
+             m_setIdFound = false;
+         }
+         else {
+             m_discardProperty = true;
+             m_discardedProperties += strLine + "\n";
+         }
+      }
+      else if (strLine.contains("var elem = properties.add(null, Cairo.Constants.ACTIVE")) {
+          // nothing to do
+      }
+      else if(strLine.contains("setValue") && ! m_discardProperty) {
+          m_setValueFound = true;
+          String expression = strLine.substring(strLine.indexOf("(") + 1, strLine.indexOf(")"));
+          if (expression.equals("m_active === true ? 1 : 0")) {
+              m_caseClassDataFields += "              active: Boolean,\n";
+          }
+          else {
+            if (! m_setIdFound) {  
+                IdentifierInfo info = getIdentifierInfo(getVariableFromExpression(expression));
+                if (info != null) {
+                    String dataType = info.variable != null ? info.variable.dataType : info.function.getReturnType().dataType;
+                    m_caseClassDataFields += getScalaType(dataType) + ",\n";
+                }
+                else {
+                    int debug = 1;
+                }
+            }
+          }
+      }      
+      else if(strLine.contains("setSelectId")) {
+          m_setIdFound = true;
+          m_caseClassDataFields = updateLastFieldType(m_caseClassDataFields, "Int");
+      }
+    }
+    
+    private String getVariableFromExpression(String variable) {
+        try {
+            for (int i = variable.length()-2; i > 0; i--) {
+                if (variable.charAt(i) == '(') {
+                    variable = variable.substring(i+1);
+                    break;
+                }
+            }
+            return variable;
+        }
+        catch(RuntimeException e) {
+            return "";
+        }
+    }
+    
+    private String updateLastFieldType(String list, String dataType) {
+        for (int i = list.length()-1; i > 0; i--) {
+            if (list.charAt(i) == ':') {
+                list = list.substring(0, i + 2) + dataType + ",\n";
+                break;
+            }
+        }
+        return list;
+    }
+    
+    private String m_formDataLastField = "";
+    private String m_formData = "";
+    
+    private void writeControllerFormData(String strLine) {
+        if (strLine.contains("var elem = properties.add(null, Cairo.General.Constants.")) {
+            m_formDataLastField = strLine.trim().replace("var elem = properties.add(null, Cairo.General.Constants.", "");
+            m_formDataLastField = m_formDataLastField.substring(0, m_formDataLastField.indexOf(")"));
+            m_formData += "      C." + m_formDataLastField + " -> ";
+        } else if (strLine.contains("setValue") && ! m_discardProperty) {
+            String expression = strLine.substring(strLine.indexOf("(") + 1, strLine.indexOf(")"));
+            if (expression.equals("m_active === true ? 1 : 0")) {
+                m_formData += "      DBHelper.ACTIVE -> boolean,\n";
+            } else if (expression.equals("m_name")) {
+                m_formData += "nonEmptyText,\n";
+            } else {
+                if (! m_setIdFound) {
+                    IdentifierInfo info = getIdentifierInfo(getVariableFromExpression(expression));
+                    if (info != null) {
+                        String dataType = info.variable != null ? info.variable.dataType : info.function.getReturnType().dataType;
+                        m_formData += getFormType(dataType) + ",\n";
+                    }
+                    else {
+                        int debug = 1;
+                    }
+                }
+            }
+        }
+        else if(strLine.contains("setSelectId")) {
+            m_formData = updateFormDataLastFieldType(m_formData, "number");
+        }        
+    }
+    
+    private String updateFormDataLastFieldType(String list, String dataType) {
+        for (int i = list.length()-1; i > 0; i--) {
+            if (list.charAt(i) == '>') {
+                list = list.substring(0, i + 2) + dataType + ",\n";
+                break;
+            }
+        }
+        return list;
+    }
+    
+    private String m_writeDataLastField = "";
+    private String m_writeData = "";
+    private String m_writeDataLastField2 = "";
+    private String m_writeDataFkBuffer = "";
+    private boolean m_setValueFound = false;
+    
+    private void writeControllerWriteData(String strLine) {
+        if (strLine.contains("var elem = properties.add(null, Cairo.General.Constants.")) {
+            m_writeDataLastField = strLine.trim().replace("var elem = properties.add(null, Cairo.General.Constants.", "");
+            m_writeDataLastField = m_writeDataLastField.substring(0, m_writeDataLastField.indexOf(")"));
+            m_writeData += "      C." + m_writeDataLastField + " -> ";
+            
+            m_writeDataLastField2 = strLine.trim().replace("var elem = properties.add(null, Cairo.General.Constants.", "");
+            m_writeDataLastField2 = m_writeDataLastField2.substring(0, m_writeDataLastField2.indexOf(")"));
+
+            if (m_caseClassPrefix.isEmpty()) {
+                m_caseClassPrefix = m_caseClassDataLastField.substring(0, m_caseClassDataLastField.indexOf("_") + 1);
+            }
+
+            if (m_writeDataLastField2.startsWith(m_caseClassPrefix)) {
+              m_writeDataLastField2 = m_writeDataLastField2.substring(m_caseClassPrefix.length());
+            }
+
+            m_writeDataLastField2 = toCamel(m_writeDataLastField2);
+            
+        } else if (strLine.contains("setValue") && ! m_discardProperty) {
+            String expression = strLine.substring(strLine.indexOf("(") + 1, strLine.indexOf(")"));
+            if (expression.equals("m_active === true ? 1 : 0")) {
+                m_writeData += "      DBHelper.ACTIVE -> Json.toJson(xxxz.active),\n";
+            } else {
+                IdentifierInfo info = getIdentifierInfo(getVariableFromExpression(expression));
+                if (info != null) {
+                    m_writeData += "Json.toJson(xxxz." + m_writeDataLastField2 + "),\n" + m_writeDataFkBuffer;
+                    m_writeDataFkBuffer = "";
+                }
+                else {
+                    int debug = 1;
+                }                    
+            }
+        }
+        else if(strLine.contains("setSelectId")) {
+            
+            if(!m_writeDataLastField.isEmpty()) {
+                String prefix = m_writeDataLastField.substring(0, m_writeDataLastField.indexOf("_"));
+
+                String jsonLine = "      C." + prefix
+                        + "_NAME -> Json.toJson(xxxz." 
+                        + prefix.toLowerCase() + "Name),\n";
+                if (m_setValueFound) {
+                    m_writeData += jsonLine;
+                    m_writeDataFkBuffer = "";
+                }
+                else {
+                    m_writeDataFkBuffer = jsonLine;
+                }
+            }
+        }
+    }
+    
+    private String m_createUpdateParamList = "";
+    private String m_paramListLastField = "";
+    
+    private void writeCreateUpdateParamList(String strLine) {
+        if (strLine.contains("var elem = properties.add(null, Cairo.General.Constants.")) {
+            m_paramListLastField = strLine.trim().replace("var elem = properties.add(null, Cairo.General.Constants.", "");
+            m_paramListLastField = m_paramListLastField.substring(0, m_paramListLastField.indexOf(")"));
+
+            if (m_caseClassPrefix.isEmpty()) {
+                m_caseClassPrefix = m_caseClassDataLastField.substring(0, m_caseClassDataLastField.indexOf("_") + 1);
+            }
+
+            if (m_paramListLastField.startsWith(m_caseClassPrefix)) {
+              m_paramListLastField = m_paramListLastField.substring(m_caseClassPrefix.length());
+            }
+
+            m_paramListLastField = toCamel(m_paramListLastField);
+
+            m_createUpdateParamList += "                       xxxz." + m_paramListLastField + ",\n";
+            
+        } else if (strLine.contains("setValue") && ! m_discardProperty) {
+            String expression = strLine.substring(strLine.indexOf("(") + 1, strLine.indexOf(")"));
+            if (expression.equals("m_active === true ? 1 : 0")) {
+                m_createUpdateParamList += "                       xxxz.active,\n";
+            }
+        }        
+    }
