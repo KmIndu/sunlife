@@ -1,1 +1,963 @@
+private String declareApiLine(String strLine) {
+        return "*TODO: API " + strLine + newline;
+    }
+
+    private boolean isBeginOfEnum(String strLine) {
+        strLine = G.ltrim(strLine);
+        strLine = removeExtraSpaces(strLine);
+        if (strLine.length() > 5) {
+            if (strLine.substring(0,5).toLowerCase().equals("enum ")) {
+                m_inEnum = true;
+                return true;
+            }
+        }
+        if (strLine.length() > 12) {
+            if (strLine.substring(0,12).toLowerCase().equals("public enum ")) {
+                m_inEnum = true;
+                return true;
+            }
+        }
+        if (strLine.length() > 13) {
+            if (strLine.substring(0,13).toLowerCase().equals("private enum ")) {
+                m_inEnum = true;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isEndOfEnum(String strLine) {
+        strLine = G.ltrim(strLine);
+
+        if (strLine.trim().length() == 8) {
+            if (strLine.substring(0,8).toLowerCase().equals("end enum")) {
+                m_inEnum = false;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isBeginOfType(String strLine) {
+        strLine = G.ltrim(strLine);
+        strLine = removeExtraSpaces(strLine);
+        if (strLine.length() > 5) {
+            if (strLine.substring(0,5).toLowerCase().equals("type ")) {
+                m_inType = true;
+                return true;
+            }
+        }
+        if (strLine.length() > 12) {
+            if (strLine.substring(0,12).toLowerCase().equals("public type ")) {
+                m_inType = true;
+                return true;
+            }
+        }
+        if (strLine.length() > 13) {
+            if (strLine.substring(0,13).toLowerCase().equals("private type ")) {
+                m_inType = true;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isEndOfType(String strLine) {
+        strLine = G.ltrim(strLine);
+
+        if (strLine.trim().length() == 8) {
+            if (strLine.substring(0,8).toLowerCase().equals("end type")) {
+                m_inType = false;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isBeginOfFunction(String strLine) {
+        // functions
+            // Function
+            // Sub
+            // Property
+        strLine = strLine.toLowerCase();
+        strLine = strLine.replaceAll("public", "");
+        strLine = strLine.replaceAll("private", "");
+        strLine = strLine.replaceAll("friend", "");
+        strLine = G.ltrimTab(strLine);
+        if (strLine.length() > 10) {
+            if (strLine.substring(0,9).toLowerCase().equals("function ")) {
+                m_inFunction = true;
+                return true;
+            }
+        }
+        if (strLine.length() > 5) {
+            if (strLine.substring(0,4).toLowerCase().equals("sub ")) {
+                m_inFunction = true;
+                return true;
+            }
+        }
+        if (strLine.length() > 10) {
+            if (strLine.substring(0,9).toLowerCase().equals("property ")) {
+                m_inFunction = true;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // posible lines
+        // declarations
+        // block: If , While, For, Do, Case
+        // asignment
+        // calls
+        // others: comments, blank, visual basic expecific liek #If
+
+    private String translateLineInDeclaration(String strLine) {
+        // declaration expecific stuff
+        //
+        return translateCode(strLine, true);
+    }
+    private String translateLineInFunction(String strLine) {
+        // function expecific stuff
+        //
+        strLine = translateCode(strLine, false);
+        return strLine;
+    }
+
+    private String translateWithSentence(String strLine) {
+        // translate inner with block
+        //
+        if (m_inWith) {
+            if (!m_withDeclaration && !m_endWithDeclaration) {
+                boolean evalWith = false;
+                if (strLine.startsWith("."))
+                    evalWith = true;
+                else if (strLine.contains(" ."))
+                    evalWith = true;
+                else if (strLine.contains("(."))
+                    evalWith = true;
+                else if (strLine.contains("\t."))
+                    evalWith = true;
+                else if (strLine.contains("!."))
+                    evalWith = true;
+                if (evalWith) {
+                    String withVariable = m_collWiths.get(m_collWiths.size()-1).getJavaName();
+                    String workLine = "";
+                    boolean literalFlag = false;
+                    for (int i = 0; i < strLine.length(); i++) {
+                        if (strLine.charAt(i) == '"') {
+                            literalFlag = !literalFlag;
+                        }
+                        else if (!literalFlag) {
+                            if (strLine.charAt(i) == '.') {
+                                if (i > 0) {
+                                    if (strLine.charAt(i - 1) == ' ') {
+                                        workLine += withVariable;
+                                    }
+                                    else if (strLine.charAt(i - 1) == '(') {
+                                        workLine += withVariable;
+                                    }
+                                    else if (strLine.charAt(i - 1) == '\t') {
+                                        workLine += withVariable;
+                                    }
+                                    else if (strLine.charAt(i - 1) == '!') {
+                                        workLine += withVariable;
+                                    }
+                                }
+                                else {
+                                    workLine += withVariable;
+                                }
+                            }
+                        }
+                        workLine += strLine.charAt(i);
+                    }
+                    strLine = workLine;
+                }
+            }
+        }
+        return strLine;
+    }
+
+    private String translateCode(String strLine, boolean inDeclaration) {
+        
+        // debug
+        //  
+        /*
+        if (strLine.contains("pIsSeparator(")) {
+            int i = 9999;
+        }
+         * 
+         */
+         /* 
+         */
+        // debug
+        
+        // first we extract comments
+        // so the code only works over executable code
+        //
+        int startComment = getStartComment(strLine);
+        String workLine = strLine;
+        String comments = "";
+        if (startComment >= 0) {
+            comments =  "//" + workLine.substring(startComment);
+            workLine = workLine.substring(0, startComment-1);
+        }
+
+        String rtn = translateCodeAux(workLine, inDeclaration);
+        rtn = translateDateConstant(rtn);
+        rtn = translateUbound(rtn);
+        rtn = translateIsNull(rtn);
+
+        if (!comments.isEmpty())
+            rtn = comments + newline + getTabs() + rtn;
+
+        return rtn;
+    }
+
+    private String translateCodeAux(String strLine, boolean inDeclaration) {
+
+        // get out spaces even tabs
+        //
+        String workLine = G.ltrimTab(strLine).toLowerCase();
+        // dim
+        if (workLine.length() > 4) {
+            if (workLine.substring(0,4).equals("dim ")) {
+                return translateDim(strLine);
+            }
+        }
+        // in declaration
+            // private and public can be modifiers of member variables
+            // or events
+            //
+        if (inDeclaration) {
+            if (workLine.length() > 8) {
+                if (workLine.substring(0,8).equals("private ")) {
+                    if (workLine.contains(" const ")) {
+                        return translatePrivateConstMember(strLine);                        
+                    }
+                    else {
+                        return translatePrivateMember(strLine);
+                    }
+                }
+            }
+            if (workLine.length() > 7) {
+                if (workLine.substring(0,7).equals("public ")) {
+                    if (workLine.contains(" const ")) {
+                        return translatePublicConstMember(strLine);
+                    }
+                    else if (workLine.contains(" event ")) {
+                        return translateEventDeclaration(strLine);
+                    }
+                    else {
+                        return translatePublicMember(strLine);
+                    }
+                }
+            }
+        }
+        // in function
+            // private and public only can be modifier of functions
+            //
+        else {
+            // a function declaration is like this
+                // Public Function ShowPrintDialog(ByVal
+            if (isFunctionDeclaration(workLine)) {
+                strLine = translateFunctionDeclaration(strLine);
+                checkEventHandler(strLine);
+                strLine = translateFunctionReturnVariable(strLine);
+                return strLine;
+            }
+            else {
+                if (isEndFunction(workLine)) {
+                    String onErrorLabelNotFound = checkOnErrorLabelFound();
+                    String endOfPreviousOnError = getEndOfPreviousOnError();
+                    String javaScript = m_translateToCairo ? ";" : "";
+                    strLine = onErrorLabelNotFound
+                                + endOfPreviousOnError
+                                + getReturnLine()
+                                + "}" + javaScript + newline;
+                    m_function = null;
+                    m_inFunction = false;
+                    return strLine;
+                }
+                // function's body
+                //
+                else {
+                    // types of sentences
+                        // conditional block
+                            // if, select case, elseif, else
+                    if (isIfSentence(workLine))
+                        return translateIfSentence(strLine);
+                    if (isElseIfSentence(workLine))
+                        return translateElseIfSentence(strLine);
+                    else if (isElseSentence(workLine))
+                        return translateElseSentence(strLine);
+                    else if (isEndIfSentence(workLine))
+                        return translateEndIfSentence(strLine);
+                    else if (isSelectCaseSentence(workLine))
+                        return translateSelectCaseSentence(strLine);
+                    else if (isCaseSentence(workLine))
+                        return translateCaseSentence(strLine);
+                    else if (isEndSelectSentence(workLine))
+                        return translateEndSelectSentence(strLine);
+                    else if (isExitFunctionSentence(workLine))
+                        return translateExitFunctionSentence(strLine);
+                    else if (isDoWhileSentence(workLine))
+                        return translateDoWhileSentence(strLine);
+                    else if (isDoSentence(workLine))
+                        return translateDoSentence(strLine);
+                    else if (isWhileSentence(workLine))
+                        return translateWhileSentence(strLine);
+                    else if (isLoopUntilSentence(workLine))
+                        return translateLoopUntilWhileSentence(strLine, true);
+                    else if (isLoopWhileSentence(workLine))
+                        return translateLoopUntilWhileSentence(strLine, false);
+                    else if (isWendSentence(workLine))
+                        return translateWendSentence(strLine);
+                    else if (isLoopSentence(workLine))
+                        return translateLoopSentence(strLine);
+                    else if (isForSentence(workLine))
+                        return translateForSentence(strLine);
+                    else if (isNextSentence(workLine))
+                        return translateNextSentence(strLine);
+                    else if (isOnErrorSentence(workLine))
+                        return translateOnErrorSentence(strLine);
+                    else if (isOnErrorLabelSentence(workLine))
+                        return translateOnErrorLabelSentence(strLine);
+                    else
+                        return translateSentenceWithNewLine(strLine);
+                        // loop block
+                            // for, while, do, loop
+
+                        // asignment sentence
+                            // set, =
+
+                        // call sentence
+                }
+            }
+        }
+        return "*" + strLine + newline;
+    }
+
+    private String translateDateConstant(String strLine) {
+        String rtn = "";
+        String[] words = G.split2(strLine);
+        for (int i = 0; i < words.length; i++) {
+            if (words[i].length() >= 8) {
+                if (words[i].charAt(0) == '#') {
+                    if (words[i].charAt(words[i].length() - 1) == '#') {
+                        if (m_AddAuxFunctionsToClass) {
+                            m_addDateAuxFunction = true;
+                            words[i] = "getDateFromString(\""
+                                        + words[i].substring(1, words[i].length() - 1)
+                                        + "\")";
+                        }
+                        // when preference are setting to use G class or CSUtils
+                        // it is translated using G.{auxfunction}
+                        //
+                        else {
+                            m_addDateAuxFunctionToG = m_UseGAuxFunctions;
+                            words[i] = "G.getDateFromString(\""
+                                        + words[i].substring(1, words[i].length() - 1)
+                                        + "\")";
+                        }
+                    }
+                }
+            }
+            rtn += words[i];
+        }
+        return rtn;
+    }
+
+    private String translateUbound(String strLine) {
+        boolean openParentheses = false;
+        boolean uboundFound = false;
+        int iOpenParentheses = 0;
+        String arrayExpression = "";
+        String rtn = "";
+        String[] words = G.split(strLine);
+        for (int i = 0; i < words.length; i++) {
+            if (uboundFound) {
+                if (words[i].equals("(")) {
+                    iOpenParentheses++;
+                    if (iOpenParentheses > 1) {
+                        arrayExpression += words[i];
+                    }
+                }
+                else if (words[i].equals(")")) {
+                    iOpenParentheses--;
+                    if (iOpenParentheses == 0) {
+                        if (arrayExpression.contains(" ")) {
+                            if (m_translateToJava)
+                                rtn += "(" + arrayExpression + ").length";
+                            else
+                                rtn += "(" + arrayExpression + ").Length";
+                        }
+                        else {
+                            if (m_translateToJava)
+                                rtn += arrayExpression + ".length";
+                            else
+                                rtn += arrayExpression + ".Length";
+                        }
+                        uboundFound = false;
+                    }
+                    else {
+                        arrayExpression += words[i];
+                    }
+
+                }
+                else if (!words[i].equalsIgnoreCase("Ubound")) {
+                    arrayExpression += words[i];
+                }
+            }
+            else {
+                if (words[i].equals("(")) {
+                    openParentheses = true;
+                }
+                else {
+                    if (openParentheses) {
+                        openParentheses = false;
+                        words[i] = translateUbound(words[i]);
+                    }
+                    else {
+                        if (words[i].length() == 6) {
+                            if (words[i].equalsIgnoreCase("Ubound")) {
+                                uboundFound = true;
+                            }
+                        }
+                    }
+                }
+                if (!uboundFound) {
+                    rtn += words[i];
+                }
+            }
+        }
+        return rtn;
+    }
+
+    private String translateIsNull(String strLine) {
+        boolean openParentheses = false;
+        boolean isNullFound = false;
+        int iOpenParentheses = 0;
+        String nullExpression = "";
+        String rtn = "";
+        String[] words = G.split(strLine);
+        for (int i = 0; i < words.length; i++) {
+            if (isNullFound) {
+                if (words[i].equals("(")) {
+                    iOpenParentheses++;
+                    if (iOpenParentheses > 1) {
+                        nullExpression += words[i];
+                    }
+                }
+                else if (words[i].equals(")")) {
+                    iOpenParentheses--;
+                    if (iOpenParentheses == 0) {
+                        if (nullExpression.contains(" ")) {
+                            rtn += "(" + nullExpression + ") == null";
+                        }
+                        else {
+                            rtn += nullExpression + " == null";
+                        }
+                        isNullFound = false;
+                    }
+                    else {
+                        nullExpression += words[i];
+                    }
+
+                }
+                else if (!words[i].equalsIgnoreCase("IsNull")) {
+                    nullExpression += words[i];
+                }
+            }
+            else {
+                if (words[i].equals("(")) {
+                    openParentheses = true;
+                }
+                else {
+                    if (openParentheses) {
+                        openParentheses = false;
+                        words[i] = translateIsNull(words[i]);
+                    }
+                    else {
+                        if (words[i].length() == 6) {
+                            if (words[i].equalsIgnoreCase("IsNull")) {
+                                isNullFound = true;
+                            }
+                        }
+                    }
+                }
+                if (!isNullFound) {
+                    rtn += words[i];
+                }
+            }
+        }
+        return rtn;
+    }
+
+    private void parseFunctionDeclaration(String strLine) {
+        
+        /*
+        // debug
+        if (strLine.toLowerCase().contains("cIABMClient_Terminate".toLowerCase())) {
+            int i = 9999;
+        }        
+        */
+        
+        // first we reset this flag which is used to determine
+        // if the function need a variable rtn to hold the return value
+        //
+        m_setReturnValueFound = false;
+        m_needReturnVariable = false;
+
+        // On Error flag is reset in every function
+        //
+        m_onErrorFound = false;
+        m_onErrorLabel = "";
+        m_onCatchBlock = false;
+
+        // get out spaces even tabs
+        //
+        String workLine = G.ltrimTab(strLine).toLowerCase();
+        // dim
+        if (workLine.length() > 4) {
+            if (workLine.substring(0,4).equals("dim ")) {
+                return;
+            }
+        }
+        // in function
+            // private and public only can be modifier of functions
+            //
+
+        // a function declaration is like this
+            // Public Function ShowPrintDialog(ByVal
+        if (isFunctionDeclaration(workLine)) {
+            String functionDeclaration = translateFunctionDeclaration(strLine);
+            String[] words = G.splitSpace(functionDeclaration);
+            if (words.length >= 3) {
+                Function function = new Function();
+                function.vbDeclaration = strLine;
+                function.javaDeclaration = functionDeclaration;
+                function.setJavaClassName(m_javaClassName);
+                int k = 2;
+                int t = 1;
+                if (words[1].equals("static")) {
+                    k = 3;
+                    t = 2;
+                }
+                String javaName;
+                if (words[k].contains("(")) {
+                    int i = words[k].indexOf("(");
+                    javaName = words[k].substring(0, i);
+                }
+                else
+                    javaName = words[k];
+                
+                /*
+                // debug
+                if (javaName.equalsIgnoreCase("cIABMClient_Terminate")) {
+                    int i = 9999;
+                }
+                 * 
+                 */
+                
+                if (m_parseToCairo) {
+                    boolean isPublicInterface = functionIsPublicInterface(javaName);
+                    javaName = translateFunctionNameToCairo(javaName);
+                    if (words[0].equals("public") || isPublicInterface) {
+                        javaName = "self." + javaName;
+                    }
+                }
+                function.getReturnType().setJavaName(javaName);        
+                
+                function.getReturnType().setVbName(m_vbFunctionName);
+                function.getReturnType().setType(words[t]);
+                m_function = function;
+                if (words[0].equals("private")) {
+                    m_privateFunctions.add(function);
+                }
+                else {
+                    m_publicFunctions.add(function);
+                }
+            }
+        }
+    }
+
+    private void parsePublicMember(String strLine) {
+        
+        // debug
+        /*
+        if (strLine.contains("cscActivo")) {
+            int i = 9999;
+        }
+        
+        if (strLine.contains("Debe comunicarse")) {
+            int i = 9999;
+        }
+        */
+        
+        // get out spaces even tabs
+        //
+        String workLine = G.ltrimTab(strLine).toLowerCase();
+        // dim
+        if (workLine.length() > 4) {
+            if (workLine.substring(0,4).equals("dim ")) {
+                return;
+            }
+        }
+        // in declaration
+            // private and public can be modifiers of member variables
+            // or events
+            //
+        if (workLine.length() > 8) {
+            if (workLine.substring(0,8).equals("private ")) {
+                return;
+            }
+        }
+        if (workLine.length() > 7) {
+            if (workLine.substring(0,7).equals("public ")) {
+                if (workLine.contains(" const ")) {
+                    try {
+                        parsePublicConstMember(strLine);
+                    }
+                    catch(Exception e) {
+                        // ignored
+                    }
+                    return;
+                }
+                else if (workLine.contains(" event ")) {
+                    return;
+                }
+                else {
+                    
+                    // form is
+                        // dim variable_name as data_type
+                    strLine = strLine.trim();
+                    String[] words = G.splitSpace(strLine);//strLine.split("\\s+");
+                    String dataType = "";
+                    String identifier = "";
+                    String vbIdentifier = "";
+                    boolean isEventGenerator = false;
+
+                    if (words.length > 1) {
+                        vbIdentifier = words[1];
+                        // with events eg:
+                        //      private withevents my_obj_with_events as CObjetWithEvents ' some comments
+                        //      0       1           2                 3        4          >= 5
+                        //
+                        if (vbIdentifier.equalsIgnoreCase("WithEvents")) {
+                            vbIdentifier = words[2];
+                            identifier = getIdentifier(vbIdentifier);
+                            if (words.length > 4) {
+                                dataType = words[4];
+                            }
+                            isEventGenerator = true;
+                        }
+                        else {
+                            identifier = getIdentifier(vbIdentifier);
+                            if (words.length > 3) {
+                                dataType = words[3];
+                            }
+                        }
+                    }
+                    if (dataType.isEmpty()) {
+                        dataType = getObjectTypeName();
+                    }
+                    dataType = getDataType(dataType);
+
+                    boolean isArray = identifier.endsWith("()");
+                    if (isArray) {
+                        identifier = identifier.substring(0, identifier.length() - 2);
+                    }
+
+                    identifier = getCairoVariableName(identifier);
+                    
+                    Variable var = new Variable();
+                    var.setVbName(vbIdentifier);
+                    var.setJavaName(identifier);
+                    var.className = m_javaClassName;
+                    var.packageName = m_packageName;
+                    var.setType(dataType);
+                    var.isPublic = true;
+                    var.isArray = isArray;
+                    var.isEventGenerator = isEventGenerator;
+                    m_publicVariables.add(var);
+                }
+            }
+        }
+    }
+    
+    private void parsePublicConstMember(String strLine) {
+        // form is
+            // dim variable_name as data_type
+        strLine = strLine.trim();
+        String[] words = G.splitSpace(strLine);//strLine.split("\\s+");
+        String dataType = "";
+        String identifier = "";
+        String constValue = "";
+        String misc = "";
+        
+        
+        // debug
+        /*
+        if (identifier.equals("cscActivo")) {
+            int i = 9999;
+        } 
+         * 
+         */
+
+        if (words.length > 2) {
+            identifier = words[2];
+            if (words.length >= 6) {
+                if (words[4].equals("=")) {
+                    dataType = words[3];
+                    constValue = words[5];                    
+                    for (int i = 6; i < words.length; i++) {
+                        misc += " " + words[i];
+                    }                
+                }
+                else {
+                    if (words.length >= 7) {
+                        if (words[5].equals("=")) {
+                            dataType = words[4];
+                            constValue = words[6];                    
+                            for (int i = 7; i < words.length; i++) {
+                                misc += " " + words[i];
+                            }                            
+                        }                        
+                    }
+                    else {
+                        for (int i = 5; i < words.length; i++) {
+                            misc += " " + words[i];
+                        }
+                    }
+                }
+            }
+            else {
+                return;
+            }
+        }
+        else {
+            return;
+        }
+        if (dataType.isEmpty()) {
+            if (constValue.charAt(0) == '"') {
+                dataType = "String";
+            }
+            else if (constValue.charAt(0) == '#'){
+                dataType = "Date";
+            }
+            else if (C_NUMBERS.contains(String.valueOf(constValue.charAt(0)))){
+                dataType = "int";
+            }
+            else if (constValue.substring(0,2).equalsIgnoreCase("&h")) {
+                dataType = "int";
+                constValue = "0x" + constValue.substring(2);
+            }
+            else {
+                IdentifierInfo info = null;
+                info = getIdentifierInfo(constValue, "", false);
+                if (info != null) {
+                    if (info.isFunction)
+                        dataType = info.function.getReturnType().dataType;
+                    else
+                        dataType = info.variable.dataType;
+                }
+                else {
+                    return;
+                }
+            }
+        }
+
+        String vbIdentifier = identifier;
+        identifier = getCairoVariableName(identifier);
+        identifier = identifier.toUpperCase();        
+        
+        Variable var = new Variable();
+        var.setVbName(vbIdentifier);
+        var.setJavaName(identifier);
+        var.className = m_javaClassName;
+        var.packageName = m_packageName;
+        var.setType(dataType);
+        var.isPublic = true;
+        var.isArray = false;
+        var.isEventGenerator = false;
+        m_publicVariables.add(var);
+    }
+
+    private boolean isCaseSentence(String strLine) {
+        if (G.beginLike(strLine, "Case ")) {
+            return true;
+        }
+        else
+            return false;
+    }
+
+    private boolean isSelectCaseSentence(String strLine) {
+        if (G.beginLike(strLine, "Select Case ")) {
+            return true;
+        }
+        else
+            return false;
+    }
+
+    private boolean isIfSentence(String strLine) {
+        if (G.beginLike(strLine, "If ")) {
+            return true;
+        }
+        else
+            return false;
+    }
+
+    private boolean isDoWhileSentence(String strLine) {
+        if (G.beginLike(strLine, "Do While ")) {
+            return true;
+        }
+        else
+            return false;
+    }
+
+    private boolean isDoSentence(String strLine) {
+        if (strLine.equalsIgnoreCase("Do") || G.beginLike(strLine, "Do ")) {
+            return true;
+        }
+        else
+            return false;
+    }
+
+    private boolean isWhileSentence(String strLine) {
+        if (G.beginLike(strLine, "While ")) {
+            return true;
+        }
+        else
+            return false;
+    }
+
+    private boolean isForSentence(String strLine) {
+        if (G.beginLike(strLine, "For ")) {
+            return true;
+        }
+        else
+            return false;
+    }
+
+    private boolean isElseIfSentence(String strLine) {
+        if (G.beginLike(strLine, "ElseIf ")) {
+            return true;
+        }
+        else
+            return false;
+    }
+
+    private boolean isElseSentence(String strLine) {
+        if (G.beginLike(strLine, "Else ")) {
+            return true;
+        }
+        else {
+            int startComment = getStartComment(strLine);
+            if (startComment >= 0) {
+                strLine = strLine.substring(0, startComment-1);
+            }
+            strLine = G.ltrimTab(strLine);
+            if (strLine.equalsIgnoreCase("Else")) {
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+    }
+
+    private boolean isEndSelectSentence(String strLine) {
+        if (G.beginLike(strLine, "End Select ")) {
+            return true;
+        }
+        else {
+            int startComment = getStartComment(strLine);
+            if (startComment >= 0) {
+                strLine = strLine.substring(0, startComment-1);
+            }
+            strLine = G.ltrimTab(strLine);
+            if (strLine.equalsIgnoreCase("End Select")) {
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+    }
+
+    private boolean isExitFunctionSentence(String strLine) {
+        if (G.beginLike(strLine, "Exit Function ")) {
+            return true;
+        }
+        else {
+            int startComment = getStartComment(strLine);
+            if (startComment >= 0) {
+                strLine = strLine.substring(0, startComment-1);
+            }
+            strLine = G.ltrimTab(strLine);
+            if (strLine.equalsIgnoreCase("Exit Function")) {
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+    }
+
+    private boolean isLoopUntilSentence(String strLine) {
+        if (G.beginLike(strLine, "Loop Until")) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+
+    private boolean isLoopWhileSentence(String strLine) {
+        if (G.beginLike(strLine, "Loop While")) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+
+    private boolean isLoopSentence(String strLine) {
+        if (G.beginLike(strLine, "Loop ")) {
+            return true;
+        }
+        else {
+            int startComment = getStartComment(strLine);
+            if (startComment >= 0) {
+                strLine = strLine.substring(0, startComment-1);
+            }
+            strLine = G.ltrimTab(strLine);
+            if (strLine.equalsIgnoreCase("Loop")) {
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+    }
+    
+    private boolean isWendSentence(String strLine) {
+        if (G.beginLike(strLine, "Wend ")) {
+            return true;
+        }
+        else {
+            int startComment = getStartComment(strLine);
+            if (startComment >= 0) {
+                strLine = strLine.substring(0, startComment-1);
+            }
+            strLine = G.ltrimTab(strLine);
+            if (strLine.equalsIgnoreCase("Wend")) {
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+    }
 
