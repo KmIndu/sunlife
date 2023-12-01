@@ -1,1 +1,944 @@
+// if the function is an event handler we will call
+    // to this function in the anonymous inner class
+    // which extends the adapter class of the event listener
+    //
+    private void checkEventHandler(String strLine) {
+        // in vb all event handler functions have an
+        // underscore which divide the name of the
+        // variable and the name of the event
+        //
+        if (m_vbFunctionName.indexOf("_") > 0) {
+            int i = 0;
+            for (i = m_vbFunctionName.length() - 1; i > 0; i--) {
+                if (m_vbFunctionName.charAt(i) == '_') {
+                    break;
+                }
+            }
+            if (i > 0) {
+                String variable = m_vbFunctionName.substring(0, i);
+                Iterator itrListener = m_eventListeners.iterator();
+                while(itrListener.hasNext()) {
+                    EventListener listener = (EventListener)itrListener.next();
+                    if (variable.equals(listener.getGeneratorVb())) {
+                        listener.getSourceCode().append(
+                                getEventHandlerDeclaration(strLine));
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    private String getEventHandlerDeclaration(String strLine) {
+        String handler = "";
+        int i = strLine.indexOf("(");
+        if (i > 0) {
+            int j = 0;
+            for (j = i; j > 0; j--) {
+                if (strLine.charAt(j) == ' ') {
+                    break;
+                }
+            }
+            if (j > 0) {
+                String functionCall = strLine.substring(j + 1, i);
+                for (j = functionCall.length() - 1; j > 0; j--) {
+                    if (functionCall.charAt(j) == '_') {
+                        break;
+                    }
+                }
+                String functionName = functionCall.substring(j + 1);
+                j = strLine.indexOf(")");
+                String params = "";
+                String paramsCall = "";
+                // check for empty params eg: function()
+                if (j - i > 1) {
+                    params = strLine.substring(i + 1, j);
+                    String[] words = G.split3(params, ",");
+                    for (i = 0; i < words.length; i++) {
+                        String param = words[i].trim();
+                        j = param.indexOf(" ");
+                        if (j > 0)
+                            j++;
+                        else
+                            j = 0;
+                        paramsCall += param.substring(j) + ", ";
+                    }
+                    if (paramsCall.length() > 0)
+                        paramsCall = paramsCall.substring(0, paramsCall.length() - 1);
+                }
+                handler = outerTabHandler
+                            +"public void " + functionName + "(" + params  + ") {"
+                            + newline
+                            + innerTabHandler + functionCall + "(" + paramsCall + ");"
+                            + newline
+                            + outerTabHandler + "}" + newline;
+            }
+        }
+        if (handler.isEmpty())
+            handler = "//*TODO:** the event handler couldn't be translated: "
+                            + strLine + newline;
+        return handler;
+    }
+
+    private String checkEventVariableInitialization(String strLine) {
+        int i = strLine.toLowerCase().indexOf(" = new ");
+        if (i > 0) {
+            String variable = strLine.substring(0, i).trim();
+            Variable var = getMemberVariable(variable);
+            if (var != null) {
+                if (var.isEventGenerator) {
+                    if (var.getVbName().equals("m_fFormula")) {
+                        int q = 0;
+                    }
+                    strLine += ";"
+                                + newline
+                                + getTabs()
+                                + getEventMacroName(var.getJavaName());
+                }
+            }
+        }
+        return strLine;
+    }
+
+    private void checkRaiseEvent(String strLine) {
+        if (strLine.toLowerCase().contains("raiseevent")) {
+            m_raiseEventFunctions.add(m_vbFunctionName);
+        }
+    }
+
+    private void checkNeedReturnVariable(String strLine) {
+        if (m_setReturnValueFound) {
+            if (!strLine.trim().isEmpty())
+                m_needReturnVariable = true;
+        }
+        else if (G.beginLike(strLine, m_vbFunctionName + " = ")) {
+            m_setReturnValueFound = true;
+        }
+        else if (strLine.toLowerCase().contains(" " + m_vbFunctionName + " = ")) {
+            m_setReturnValueFound = true;
+        }
+    }
+
+    private void setNeedReturnValue() {
+        m_function.setNeedReturnVariable(m_needReturnVariable);
+    }
+
+    private String replaceSlashInLiterals(String strLine) {
+        boolean literalFlag = false;
+        String workLine = "";
+        for (int i = 0; i < strLine.length(); i++) {
+            if (strLine.charAt(i) == '"') {
+                literalFlag = !literalFlag;
+            }
+            if (literalFlag) {
+                if (strLine.charAt(i) == '\\') {
+                    workLine += "\\\\";
+                }
+                else {
+                    workLine += String.valueOf(strLine.charAt(i));
+                }
+            }
+            else {
+                workLine += String.valueOf(strLine.charAt(i));
+            }
+        }
+        return workLine;
+    }
+
+    private String getDefaultReturnValue() {
+        Variable returnType = m_function.getReturnType();
+        if (m_returnValue.equals("null") && (
+                returnType.isBoolean ||
+                returnType.isInt ||
+                returnType.isLong ||
+                returnType.isString
+                )) {
+            m_returnValue = "";
+        }
+        if (m_returnValue.isEmpty()) {
+            if (m_function.getReturnType().isBoolean)
+                return "false";
+            else if (returnType.isArray)
+                return null;
+            else if (returnType.isInt || returnType.isLong)
+                return "0";
+            else if (returnType.isString)
+                return "\"\"";
+            else
+                return "";
+        }
+        else
+            return m_returnValue;
+    }
+    
+    private String replaceExitSentence(String strLine) {
+        if (G.endLike(strLine, "Exit Function")) {
+            if (m_function.getNeedReturnVariable()) {
+                return "return _rtn";
+            }
+            else {
+                return "return " + getDefaultReturnValue();
+            }
+        }
+        else if (G.endLike(strLine, "Exit Sub")) {
+            return "return";
+        }
+        else if (G.endLike(strLine, "Exit For")) {
+            return "break";
+        }
+        else if (G.endLike(strLine, "Exit Do")) {
+            return "break";
+        }
+        else {
+            return strLine;
+        }
+    }
+
+    private String replaceVbNameWithJavaName(String strLine) {
+
+        // debug
+        /*
+        if (strLine.toUpperCase().contains("MSG_DOC_INFO")) {
+            int i = 9999;
+        }
+         * 
+         */
+        
+        IdentifierInfo info = null;
+        String type = "";
+        String parent = "";
+        String[] words = G.split2(strLine, "!\t/*-+ ,.()[]:");
+        strLine = "";
+        String[] parents = new String[30]; // why 30? who nows :P, 30 should be enough :)
+        int openParentheses = 0;
+        boolean previousWasPeriod = false;
+
+        for (int i = 0; i < words.length; i++) {
+            if (!("!\t/*-+ ,.()[]'\":".contains(words[i]))) {
+                info = getIdentifierInfo(words[i] + getParameters(words, i), parent, !parent.isEmpty());
+                if (info == null)
+                    type = "";
+                else if (info.isFunction) {
+                    type = info.function.getReturnType().dataType;
+                    words[i] = info.function.getJavaName();
+                    String functionClassName = info.function.getJavaClassName();
+                    // if the function doesn't have a parent and it is not declared
+                    // in this class it must be a statict function (the equivalent
+                    // java to vb6 public functions in bas files)
+                    //
+                    if (parent.isEmpty() 
+                            && !functionClassName.equals(m_javaClassName)
+                            && !functionClassName.isEmpty()) {
+                        // we need to add the class name to access the function
+                        //
+                        words[i] = functionClassName + '.' + words[i];
+                    }
+                    if (i + 1 < words.length) {
+                        if (!words[i + 1].equals("("))
+                            words[i] += "()";
+                    }
+                    else {
+                        words[i] += "()";
+                    }
+                }
+                else {
+                    if (info.variable.isArray) {
+                        int arrayParentheses = 0;
+                        for (int k = i + 1; k < words.length; k++) {
+                            if (words[k].equals("(")) {
+                                if (arrayParentheses == 0) {
+                                    words[k] = "[";
+                                }
+                                arrayParentheses++;
+                            }
+                            else if (words[k].equals(")")) {
+                                arrayParentheses--;
+                                if (arrayParentheses == 0) {
+                                    words[k] = "]";
+                                    break;
+                                }
+                            }
+                            else if (arrayParentheses == 0
+                                    && !"\t ".contains(words[k])) {
+                                break;
+                            }
+                        }
+                    }
+                    type = info.variable.dataType;
+                    if (!previousWasPeriod) {
+                        if (info.variable.isEnumMember)
+                            words[i] = info.variable.className
+                                        + "." + info.variable.getJavaName();
+                        else {
+                            if (info.variable.isPublic) {
+                                words[i] = info.variable.className
+                                            + "." + info.variable.getJavaName();                            
+                            }
+                            else
+                                words[i] = info.variable.getJavaName();
+                        }
+                    }
+                    else {
+                        words[i] = info.variable.getJavaName();
+                    }
+                }
+                parent = type;
+            }
+            else if (words[i].equals("(")) {
+                parents[openParentheses] = parent;
+                parent = "";
+                openParentheses++;
+            }
+            else if (words[i].equals(")")) {
+                openParentheses--;
+                
+                // debug
+                /*
+                if (openParentheses > parents.length-1 || openParentheses < 0)
+                {
+                    int q = 0;
+                }
+                 /* 
+                 */
+                // debug
+                parent = parents[openParentheses];
+            }
+            else if (words[i].equals("[")) {
+                parents[openParentheses] = parent;
+                parent = "";
+                openParentheses++;
+            }
+            else if (words[i].equals("]")) {
+                openParentheses--;
+                parent = parents[openParentheses];
+                parents[openParentheses] = "";
+            }
+            else if (words[i].equals(" ")) {
+                parent = "";
+            }
+            previousWasPeriod = words[i].equals(".");
+            strLine += words[i];
+        }
+        return strLine;
+    }
+    
+    private String getParameters(String[] words, int index) {
+        String params = "(";
+        if (words.length-3 > index) {
+            if (words[index+1].equals("(")) {
+                for (int q = index+2; q < words.length; q++) {
+                    if (words[q].equals(")")) {
+                        return params + ")";
+                    }
+                    else {
+                        params += words[q];
+                    }
+                }
+            }
+        }
+        return "";
+    }
+
+    private String replacePropertySetSentence(String strLine) {
+        IdentifierInfo info = null;
+        String type = "";
+        String parent = "";
+        boolean addParentheses = false;
+        String[] words = G.split2(strLine, "\t/*-+ .()");
+        strLine = "";
+        String[] parents = new String[30]; // why 30? who nows :P, 30 should be enough :)
+        int openParentheses = 0;
+
+        for (int i = 0; i < words.length; i++) {
+            if (!(",.()\"'".contains(words[i]))) {
+                info = getIdentifierInfo(words[i], parent, !parent.isEmpty());
+                if (info == null)
+                    type = "";
+                else if (info.isFunction) {
+                    type = info.function.getReturnType().dataType;
+                    
+                    if (i + 4 < words.length) {
+                        // set with one parameter eg: property set value(byval rhs as object)
+                        //
+                        if (words[i + 4].equals("=")) {
+                            String setter = info.function.getJavaName();
+                            setter = "set" + setter.substring(3, setter.length());
+                            words[i] = setter;
+                            words[i + 2] = ""; // )
+                            words[i + 3] = ""; // space character
+                            words[i + 4] = ""; // =
+                            words[i + 5] = ""; // space character
+                            addParentheses = true;
+                        }
+                        // set with two or more parameters
+                        // eg: property set value(byval name as string, byval rhs as object)
+                        //
+                        // we can have to translate something like this
+                        //
+                        //  myObject.value(getValueForKey(gdb.ValField(rs.fields, "myKey"))) = theValue
+                        //
+                        // to this
+                        //
+                        //  myObject.setValue(getValueForKey(gdb.ValField(rs.fields, "myKey"))), theValue);
+                        //
+                        else {
+                            int equalsIdx = 0;
+                            int parentheses = 0;
+                            boolean closedParenthesesFound = false;
+                            boolean moreThanOneParenthesesFound = false;
+                            String parameters = "";
+                            for (int k = i + 1; k < words.length; k++) {
+                                if (words[k].equals("=")) {
+                                    equalsIdx = k;
+                                    break;
+                                }
+                            }
+                            if (equalsIdx > 0) {
+                                for (int k = i +1; k < equalsIdx; k++) {
+                                    // skip spaces
+                                    //
+                                    if (!words[k].trim().isEmpty()) {
+                                        // if it is not a space and we
+                                        // have found a close parentheses
+                                        // for this function we are
+                                        // dealing with something like this
+                                        //
+                                        // myObject.setProperty(someParameters) somethingElse =
+                                        //
+                                        // we can not translate this
+                                        //
+                                        if (closedParenthesesFound) {
+                                            moreThanOneParenthesesFound = true;
+                                            break;
+                                        }
+                                        // for each ( we increase prentheses variable
+                                        //
+                                        else if (words[k].equals("(")) {
+                                            parameters += words[k];
+                                            parentheses++;
+                                        }
+                                        // for each ) we decrease parentheses variable
+                                        //
+                                        else if (words[k].equals(")")) {
+                                            parentheses--;
+                                            // if parentheses reach 0 we have
+                                            // found the close parentheses of
+                                            // the parameters of the function
+                                            //
+                                            if (parentheses == 0) {
+                                                // we turn on this flag to detect
+                                                // sentences like:
+                                                //
+                                                // myObject.setProperty(paramethers)(paramethers) =
+                                                //
+                                                // we can not translate this
+                                                //
+                                                closedParenthesesFound = true;
+                                            }
+                                            else
+                                                parameters += words[k];
+                                        }
+                                        else
+                                            parameters += words[k];
+                                    }
+                                    else
+                                        parameters += words[k];
+                                }
+                                if (!moreThanOneParenthesesFound && parentheses == 0) {
+                                    String setter = info.function.getJavaName();
+                                    setter = "set" + setter.substring(3, setter.length());
+                                    addParentheses = true;
+                                    strLine += setter + parameters.trim() + ",";
+                                    i = equalsIdx + 1;
+                                }
+                            }
+                        }
+                    }
+                }
+                else {
+                    type = info.variable.dataType;
+                }
+                parent = type;
+            }
+            else if (words[i].equals("(")) {
+                parents[openParentheses] = parent;
+                parent = "";
+                openParentheses++;
+            }
+            else if (words[i].equals(")")) {
+                openParentheses--;
+                parent = parents[openParentheses];
+            }
+            else if (words[i].equals(" ")) {
+                parent = "";
+            }
+            
+            strLine += words[i];
+        }
+        if (addParentheses)
+            strLine += ")";
+        return strLine;
+    }
+
+    private String replaceIsNothing(String strLine) {
+        // we contemplate Not identifier Is Nothing
+        //
+        String[] words = G.split2(strLine, "!\t/*-+ .()");
+        strLine = "";
+        for (int i = 0; i < words.length; i++) {
+            if (words[i].equals("!")) {
+                if (i + 5 < words.length ) {
+                    if (words[i+3].equalsIgnoreCase("Is")
+                            && words[i+5].equalsIgnoreCase("Nothing")) {
+                        words[i] = "";
+                        words[i+3] = "!=";
+                        words[i+5] = "null";
+                    }
+                }
+            }
+            strLine += words[i];
+        }
+        return strLine.replaceAll("Is Nothing", "== null");
+    }
+
+    private String replaceNothing(String strLine) {
+        if (strLine.contains("Nothing")) {
+            strLine = strLine.replaceAll(" Nothing ", " null");
+            strLine = strLine.replaceAll("\\(Nothing\\)", "(null)");
+            strLine = strLine.replaceAll("\\(Nothing,", "(null,");
+            strLine = strLine.replaceAll(", Nothing\\)", ", null)");
+            strLine = strLine.replaceAll(" Nothing,", ", null,");
+            // ", Nothing" or "= Nothing"
+            if (strLine.endsWith(" Nothing"))
+                strLine = strLine.substring(0, strLine.length() - 8) + " null";
+
+        }
+        return strLine;
+    }
+
+    private String replaceRedimSentence(String strLine) {
+        if (!G.beginLike(strLine.trim().toLowerCase(),"redim "))
+            return strLine;
+
+        String array = "";
+        String size = "";
+        String[] words = G.split(strLine, "\t ");
+        // posible sentences
+        // 1 - redim variable(...)
+        // 2 - redim preserve variable(...)
+        //
+        // not supported sentence
+        if (words.length < 4) {
+            return "/*TODO:** this redim sentence can't be translated " + strLine;
+        }
+        // 1
+        else if (words.length < 7) {
+            array = words[2];
+            size = words[4];
+            if (m_AddAuxFunctionsToClass) {
+                m_addRedimAuxFunction = true;
+                return "redim(" + array + ", " + size + ")";
+            }
+            else {
+                m_addRedimAuxFunctionToG = m_UseGAuxFunctions;
+                return "G.redim(" + array + ", " + size + ")";
+            }
+        }
+        // 2
+        else {
+            array = words[4];
+            size = words[6];
+            if (m_AddAuxFunctionsToClass) {
+                m_addRedimPreserveAuxFunction = true;
+                return "redimPreserve(" + array + ", " + size + ")";
+            }
+            else {
+                m_addRedimPreserveAuxFunctionToG = m_UseGAuxFunctions;
+                return "G.redimPreserve(" + array + ", " + size + ")";
+            }
+        }
+    }
+
+    private String replaceWithSentence(String strLine) {
+
+        // debug
+        /*
+        if (strLine.toLowerCase().contains("With m_Groups.Item(i)".toLowerCase())) {
+            int i = 0;
+        }
+         /* 
+         */
+        // debug
+        
+        if (G.beginLike(strLine, "with ")) {
+            m_withDeclaration = true;
+
+            // first we have to get the variable
+            // and then the type of it
+            //
+            int startComment = getStartComment(strLine);
+            String workLine = strLine;
+            String comments = "";
+            if (startComment >= 0) {
+                comments =  "; //" + workLine.substring(startComment);
+                workLine = workLine.substring(0, startComment-1);
+            }
+            int i = workLine.toLowerCase().indexOf("with");
+            IdentifierInfo info = null;
+            String packageName = "";
+            String type = "";
+            String parent = "";
+            String parentJavaName = "";
+            boolean inWith = false;
+            workLine = workLine.substring(i + 5).trim();
+            boolean startWithPeriod = false;
+            if (workLine.charAt(0) == '.') {
+                startWithPeriod = true;
+                if (workLine.length() > 1) {
+                    workLine = workLine.substring(1);
+                }
+                else {
+                    workLine = "";
+                }
+            }
+            // debug
+            // String[] words = G.split3(workLine,".");
+            String[] words = G.split4(workLine,".");
+            // debug
+            
+            if (m_collWiths.size() > 0 && startWithPeriod) {
+                parent = m_collWiths.get(m_collWiths.size()-1).dataType;
+                parentJavaName = m_collWiths.get(m_collWiths.size()-1).getJavaName() + ".";
+                inWith = true;
+            }
+            else {
+                parent = "";
+                parentJavaName = "";
+            }
+            for (i = 0; i < words.length; i++) {
+                info = getIdentifierInfo(words[i], parent, !parent.isEmpty());
+                if (info == null)
+                    type = "";
+                else if (info.isFunction)
+                    type = info.function.getReturnType().dataType;
+                else
+                    type = info.variable.dataType;
+                parent = type;
+            }
+            String parentWithCall = ""; // for example: "tBi." in "With tBI.bmiHeader"
+            for (i = 0; i < words.length-1; i++) {
+                parentWithCall += words[i] + ".";
+            }
+
+            String prefix = "";
+            if (type.length() == 0) {
+                type = "__TYPE_NOT_FOUND";
+                prefix = "//*TODO:** can't found type for with block"
+                            + newline
+                            + getTabs()
+                            + "//*"
+                            + strLine
+                            + newline
+                            + getTabs();
+            }
+
+            Variable var = new Variable();
+            var.setType(type);
+            var.packageName = packageName;
+
+            if (info == null) {
+                var.setJavaName("w_" + var.dataType.substring(0, 1).toLowerCase()
+                            + var.dataType.substring(1));
+
+                if (inWith) {
+                    if (m_translateToCairo) {
+                        String varName = var.getJavaName();
+                        if (var.dataType.equals("cIABMTabItem")) {
+                            varName = varName.equals("w_add") ? "tab" : varName;
+                        }
+                        else {
+                            varName = varName.equals("w_add") ? "elem" : varName;
+                        }
+                        varName = varName.equals("w_properties") ? "properties" : varName;                        
+                        var.setJavaName(varName);
+                        strLine = prefix
+                                    + "var "
+                                    + var.getJavaName()
+                                    + " = "
+                                    + parentJavaName
+                                    + workLine
+                                    + comments;                        
+                    }
+                    else {
+                        strLine = prefix
+                                    + var.dataType
+                                    + " "
+                                    + var.getJavaName()
+                                    + " = "
+                                    + parentJavaName
+                                    + workLine
+                                    + comments;
+                    }
+                }
+                else {
+                    if (m_translateToCairo) {
+                        String varName = var.getJavaName();
+                        if (var.dataType.equals("cIABMTabItem")) {
+                            varName = varName.equals("w_add") ? "tab" : varName;
+                        }
+                        else {
+                            varName = varName.equals("w_add") ? "elem" : varName;
+                        }
+                        varName = varName.equals("w_item") ? "property" : varName;
+                        varName = varName.equals("w_properties") ? "properties" : varName;
+                        var.setJavaName(varName);
+                        strLine = prefix
+                                    + "var "
+                                    + varName
+                                    + " = " + workLine
+                                    + comments;
+                    }
+                    else {
+                        strLine = prefix
+                                    + var.dataType
+                                    + " "
+                                    + var.getJavaName()
+                                    + " = " + workLine
+                                    + comments;
+                    }
+                    m_inWith = true;
+                }
+            }
+            else {
+                if (info.isFunction) {
+                    var.setJavaName("w_" + info.function.getVbName().substring(0, 1).toLowerCase()
+                                + info.function.getVbName().substring(1));
+                    String params = "";
+                    int startParams = workLine.indexOf("(");
+                    if (startParams >= 0) {
+                        params = workLine.substring(startParams);
+                    }
+                    else {
+                        params = "()";
+                    }
+                    if (inWith) {
+                        if (m_translateToCairo) {
+                            String varName = var.getJavaName();
+                            if (var.dataType.equals("cIABMTabItem")) {
+                                varName = varName.equals("w_add") ? "tab" : varName;
+                            }
+                            else {
+                                varName = varName.equals("w_add") ? "elem" : varName;
+                            }
+                            if (!m_function.getJavaName().startsWith("pLoad")) {
+                                varName = varName.equals("w_item") ? "property" : varName;
+                            }
+                            varName = varName.equals("w_properties") ? "properties" : varName;
+                            var.setJavaName(varName);
+                            strLine = prefix
+                                        + "var "
+                                        + varName
+                                        + " = "
+                                        + parentJavaName
+                                        + info.function.getJavaName()
+                                        + params
+                                        + comments;
+                        }
+                        else {
+                            strLine = prefix
+                                        + var.dataType
+                                        + " "
+                                        + var.getJavaName()
+                                        + " = "
+                                        + parentJavaName
+                                        + info.function.getJavaName()
+                                        + params
+                                        + comments;
+                        }
+                    }
+                    else {
+                        if (m_translateToCairo) {
+                            String varName = var.getJavaName();
+                            if (var.dataType.equals("cIABMTabItem")) {
+                                varName = varName.equals("w_add") ? "tab" : varName;
+                            }
+                            else {
+                                varName = varName.equals("w_add") ? "elem" : varName;
+                            }                            
+                            varName = varName.equals("w_item") ? "property" : varName;
+                            varName = varName.equals("w_properties") ? "properties" : varName;
+                            var.setJavaName(varName);                            
+                            strLine = prefix
+                                        + "var "
+                                        + varName
+                                        + " = "
+                                        + parentWithCall
+                                        + info.function.getJavaName()
+                                        + params
+                                        + comments;
+                        }
+                        else {
+                            strLine = prefix
+                                        + var.dataType
+                                        + " "
+                                        + var.getJavaName()
+                                        + " = "
+                                        + parentWithCall
+                                        + info.function.getJavaName()
+                                        + params
+                                        + comments;
+                        }
+                        m_inWith = true;
+                    }
+                }
+                else {
+                    String arrayIndex = "";
+                    if (info.variable.isArray) {
+                        int startArrayIndex = workLine.indexOf("(");
+                        if (startArrayIndex >= 0) {
+                            arrayIndex = workLine.substring(startArrayIndex).replace("(","[").replace(")","]");
+                        }
+                    }
+                    var.setJavaName(parentWithCall + info.variable.getJavaName() + arrayIndex);
+                    strLine = ""; //"// " + strLine;
+                    m_inWith = true;
+                }
+            }
+            m_collWiths.add(var);
+            m_functionVariables.add(var);
+            
+        }
+        else {
+            m_withDeclaration = false;
+        }
+        return strLine;
+    }
+
+    private String replaceRaiseEvent(String strLine) {
+        if (G.beginLike(strLine, "RaiseEvent ")) {
+            int i = strLine.toLowerCase().indexOf("raiseevent ") + 11;
+            String call = strLine.substring(i);
+            call = call.substring(0, 1).toLowerCase() + call.substring(1);
+            if (!G.endLike(call, ")"))
+                call += "()";
+            String className = m_javaClassName + C_INTERFACE_POSTIFX;
+            strLine = "Iterator listeners = m_listeners.iterator();"
+                    + newline + getTabs() 
+                    + "while(listeners.hasNext()) {"
+                    + newline + getTabs() 
+                    + "    ((" + className + ")listeners.next())." + call + ";"
+                    + newline + getTabs() 
+                    + "}";
+        }
+        return strLine;
+    }
+
+    private String replaceNewSentence(String strLine) {
+        final String C_IDENTIFIER_FIRST_CHAR = "abcdefghijklmnopqrstuvwyxz";
+        boolean newFound = false;
+        String[] words = G.split2(strLine, "\t (),");
+        strLine = "";
+        for (int i = 0; i < words.length; i++) {
+            if (words[i].equalsIgnoreCase("new")) {
+                words[i] = "new";
+                newFound = true;
+            }
+            else if (newFound) {
+                if (C_IDENTIFIER_FIRST_CHAR.contains(words[i].substring(0,1).toLowerCase())) {
+                    words[i] += "()";
+                    newFound = false;
+                }
+                else if (!words[i].trim().isEmpty()) {
+                    newFound = false;
+                }
+            }
+            strLine += words[i];
+        }
+        return strLine;
+    }
+
+    private String replaceEndWithSentence(String strLine) {
+        boolean isEndWith = false;
+        if (strLine.equalsIgnoreCase("end with")) {
+            isEndWith = true;
+        }
+        if (G.beginLike(strLine, "end with ")) {
+            isEndWith = true;
+        }
+        m_endWithDeclaration = isEndWith;
+        if (isEndWith) {
+            String withName = "";
+            if (m_collWiths.size() > 0) {
+                withName = m_collWiths.get(m_collWiths.size()-1).getJavaName();
+                m_collWiths.remove(m_collWiths.size()-1);
+            }
+            m_inWith = m_collWiths.size() > 0;
+            return ""; //"// {end with: " + withName + "}";
+        }
+        else
+            return strLine;
+    }
+
+    private IdentifierInfo getIdentifierInfo(String identifier, String className, boolean isField) {
+        // - get the object from this class (member variables)
+        // if the object is not found then
+        // - get the object from the database (public variables)
+        //      -- first objects in this package then objects in
+        //         other packages in the order set in the vbp's
+        //         reference list
+
+        // debug
+        /*
+        if (G.beginLike(identifier.trim(),"MSG_DOC_INFO")) {
+            int i = 9999;
+        }
+         * 
+         */
+            
+        IdentifierInfo info = null;
+        Variable var = getVariable(identifier, className, isField);
+        if (var != null) {
+            info = new IdentifierInfo();
+            info.isFunction = false;
+            info.variable = var;
+        }
+        else {
+            Function function = getFunction(identifier, className);
+            if (function != null) {
+                info = new IdentifierInfo();
+                info.isFunction = true;
+                info.function = function;
+            
+                if (parametersInCall(identifier)) {
+                    m_classObject.setPackageName(function.getReturnType().packageName);
+                    m_classObject.setVbName(function.getReturnType().dataType);
+                    m_classObject.setJavaName("");
+                    m_classObject.getClassIdFromClassName();
+                    String itemDataType = m_classObject.getDataTypeOfCollectionItem();
+                    if (!itemDataType.isEmpty() && identifier.startsWith("Properties")) {
+                        Function fun = new Function();
+                        fun.setJavaClassName(function.getReturnType().dataType);
+                        fun.getReturnType().setJavaNameWithoutValidate("getProperties().item");
+                        fun.getReturnType().setVbName("Item");
+                        fun.getReturnType().setType(itemDataType);
+                        info.function = fun;                    
+                    }
+                }
+            }
+        }
+        return info;
+    }
+    
+    private Boolean parametersInCall(String call) {
+        if (call.contains("(")) {
+            if (call.contains(")")) {
+                int i = call.indexOf("(");
+                int j = call.indexOf(")");
+                if(!call.substring(i, j).trim().isEmpty()) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 
