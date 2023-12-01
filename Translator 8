@@ -1,1 +1,973 @@
+ // Friend
+        //
+        else if (words[0].equalsIgnoreCase("friend")) {
+            functionScope = "public";
+            functionName = words[2];
+            m_vbFunctionName = words[2];
+            if (words[1].equalsIgnoreCase("sub")) {
+                functionType = "void";
+            }
+            else if (words[1].equalsIgnoreCase("function")) {
+                functionType = getFunctionType(strLine);
+            }
+            // properties
+            //
+            else {
+                if (functionName.equalsIgnoreCase("get")) {
+                    functionName = "get" 
+                                    + words[3].substring(0, 1).toUpperCase()
+                                    + words[3].substring(1);
+                    m_vbFunctionName = words[3];
+                    functionType = getPropertyType(strLine);
+                }
+                else {
+                    functionName = "set" 
+                                    + words[3].substring(0, 1).toUpperCase()
+                                    + words[3].substring(1);
+                    m_vbFunctionName = words[3];
+                    functionType = "void";
+                }
+            }
+        }
+        else if (words[0].equalsIgnoreCase("function")) {
+            functionScope = "private";
+            functionName = words[1];
+            m_vbFunctionName = words[1];
+            functionType = getFunctionType(strLine);
+        }
+        else if (words[0].equalsIgnoreCase("sub")) {
+            functionScope = "private";
+            functionName = words[1];
+            m_vbFunctionName = words[1];
+            functionType = "void";
+        }
+        else if (words[0].equalsIgnoreCase("property")) {
+            functionScope = "private";
+            functionName = words[1];
+            m_vbFunctionName = words[1];
+            if (functionName.equalsIgnoreCase("get")) {
+                functionName = "get" 
+                                + words[2].substring(0, 1).toUpperCase()
+                                + words[2].substring(1);
+                m_vbFunctionName = words[2];
+                functionType = getPropertyType(strLine);
+            }
+            else {
+                functionName = "set" 
+                                + words[2].substring(0, 0).toUpperCase()
+                                + words[2].substring(1);
+                m_vbFunctionName = words[2];
+                functionType = "void";
+            }
+        }
+
+        if (functionName.contains("(")) {
+            functionName = functionName.substring(0,functionName.indexOf("("));
+            m_vbFunctionName = m_vbFunctionName.substring(0, m_vbFunctionName.indexOf("("));
+        }
+
+        if (functionName.length() < 1) {
+            functionName = "";
+            m_vbFunctionName = "";
+        }
+
+        functionName = functionName.substring(0, 1).toLowerCase()
+                        + functionName.substring(1);
+        
+        if (m_translateToCairo) {
+            
+            updateInCairoFlags(functionName);
+            
+            if (functionIsPublicInterface(functionName)){
+                functionScope = "public";
+            }            
+            functionName = translateFunctionNameToCairo(functionName);
+            m_inRemoveFunction = functionName.equals("_REMOVE_");
+        }
+        
+        if (!functionName.isEmpty() && functionScope.equals("public"))
+            saveFunction(m_vbFunctionName, functionName, functionType);
+
+        m_returnValue = getDefaultForReturnType(functionType);
+
+        String modifiers = "";
+        
+        if (m_isBasFile)
+            modifiers = "static ";
+        
+        modifiers += getIfNeedToBeSyncrhonized();
+        
+        String todoByRef = "";
+        if (strLine.contains("ByRef "))
+            todoByRef = " // TODO: Use of ByRef founded " + strLine;
+        
+        String firstFunctionSpace = " ";
+        String secondFunctionSpace = " ";
+        String javaScriptDeclaration = "";
+                
+        if (m_translateToCairo) {
+            if (functionScope.equals("public")) {
+                functionScope = "self.";
+                firstFunctionSpace = "";
+            }
+            else {
+                functionScope = "var";
+            }
+            modifiers = "";
+            functionType = "";
+            secondFunctionSpace = "";
+            javaScriptDeclaration = " = function";
+            
+            if (functionName.startsWith("pIsEmptyRow")
+                    || functionName.startsWith("pLoad")) {
+                todoByRef = "";
+            }
+        }
+
+        return functionScope + firstFunctionSpace
+                + modifiers
+                + functionType + secondFunctionSpace
+                + functionName 
+                + javaScriptDeclaration
+                + "("
+                + translateParameters(strLine)
+                + ") {"
+                + todoByRef
+                + newline;
+    }
+
+    private String translateFunctionReturnVariable(String strLine) {
+        m_function = getFunction(m_vbFunctionName, "me");
+        if (m_function != null) {
+            if (m_function.getNeedReturnVariable()) {
+                String dataType;
+                if (m_translateToCairo) {
+                    dataType = "var";
+                }
+                else {
+                    dataType = m_function.getReturnType().dataType;
+                }                
+                String returnValue = m_returnValue.isEmpty() ? "null" : m_returnValue;
+                strLine += getTabs()
+                        + C_TAB + dataType
+                        + " _rtn = " + returnValue + ";" + newline;
+            }
+        }
+        /*else {
+            m_function = getFunction(m_vbFunctionName, "me");
+        }*/
+        return strLine;
+    }
+
+    private String getReturnLine() {
+        String returnLine = "";
+        if (m_function.getNeedReturnVariable()) {
+            returnLine = "\n" + getTabs() + C_TAB + "return _rtn;" + newline + getTabs();
+        }
+        return returnLine;
+    }
+
+    private String replaceNotSentence(String strLine) {
+        if (strLine.contains(" Not "))
+            strLine = strLine.replace(" Not ", " !");
+        else if (strLine.contains(" Not("))
+            strLine = strLine.replace(strLine, " !(");
+        return strLine;
+    }
+
+    private String replaceResumeSentence(String strLine) {
+        if (strLine.toLowerCase().contains("resume("))
+            return "/**TODO:** resume found: " + strLine + "*/";
+        else
+            return strLine;
+    }
+
+    private String replaceGotoSentence(String strLine) {
+        if (G.beginLike(strLine.trim(), "GoTo "))
+            return "// **TODO:** goto found: " + strLine;
+        else
+            return strLine;
+    }
+
+    private String replaceLabelSentence(String strLine) {
+        if (strLine.trim().endsWith(":"))
+            return "// **TODO:** label found: " + strLine;
+        else
+            return strLine;
+    }
+
+    private String replaceSetReturnValueSentence(String strLine) {
+        if (m_inFunction) {
+            if (m_function != null) {
+                String toSearch = m_function.getVbName() + " = ";
+                if (strLine.startsWith(toSearch)) {
+                    if (m_function.getNeedReturnVariable())
+                        strLine = "_rtn = " + strLine.substring(toSearch.length());
+                    else
+                        strLine = "return " + strLine.substring(toSearch.length());
+                }
+                toSearch = " " + toSearch;
+                if (strLine.contains(toSearch)) {
+                    if (m_function.getNeedReturnVariable())
+                        strLine = strLine.replace(toSearch, " _rtn = ");
+                    else
+                        strLine = strLine.replace(toSearch, " return ");
+                }
+                else {
+                    toSearch = m_function.getJavaName() + " = ";
+                    if (strLine.startsWith(toSearch)) {
+                        if (m_function.getNeedReturnVariable())
+                            strLine = "_rtn = " + strLine.substring(toSearch.length());
+                        else
+                            strLine = "return " + strLine.substring(toSearch.length());
+                    }
+                    toSearch = " " + toSearch;
+                    if (strLine.contains(toSearch)) {
+                        if (m_function.getNeedReturnVariable())
+                            strLine = strLine.replace(toSearch, " _rtn = ");
+                        else
+                            strLine = strLine.replace(toSearch, " return ");
+                    }
+                }
+            }
+            /*else {
+                m_function = getFunction(m_vbFunctionName, "me");
+            }*/
+        }
+        return strLine;
+    }
+
+    private String getIfNeedToBeSyncrhonized() {
+        Iterator function = m_raiseEventFunctions.iterator();
+        while (function.hasNext()) {
+            if (((String)function.next()).equals(m_vbFunctionName)) {
+                return "synchronized ";
+            }
+        }
+        return "";
+    }
+
+    private String translateEventDeclaration(String strLine) {
+        String eventName = "";
+        String eventScope = "";
+
+        strLine = G.ltrimTab(strLine);
+        String[] words = G.splitSpace(strLine);//strLine.split("\\s+");
+
+        // Public
+        //
+        if (words[0].equalsIgnoreCase("public")) {
+            eventScope = "public";
+            eventName = words[2];
+        }
+        // Private
+        //
+        else if (words[0].equalsIgnoreCase("private")) {
+            eventScope = "private";
+            eventName = words[2];
+        }
+        // Friend
+        //
+        else if (words[0].equalsIgnoreCase("friend")) {
+            eventScope = "public";
+            eventName = words[2];
+        }
+        else if (words[0].equalsIgnoreCase("event")) {
+            eventScope = "public";
+            eventName = words[1];
+        }
+
+        if (eventName.contains("(")) {
+            eventName = eventName.substring(0,eventName.indexOf("("));
+        }
+
+        if (eventName.length() < 1) {
+            eventName = "";
+        }
+
+        if (eventName.isEmpty()) {
+            return "//*TODO:** the event declaration couldn't be translated. "
+                    + newline
+                    + strLine;
+        }
+        else {
+
+            String todoByRef = "";
+            if (strLine.contains(todoByRef))
+                todoByRef = " // TODO: Use of ByRef founded " + strLine;
+            
+            m_listenerInterface += C_TAB
+                                    + eventScope + " "
+                                    + "void "
+                                    + eventName.substring(0, 1).toLowerCase()
+                                    + eventName.substring(1) + "("
+                                    + translateParameters(strLine)
+                                    + ");"
+                                    + todoByRef
+                                    + newline;
+            m_adapterClass += C_TAB
+                                    + eventScope + " "
+                                    + "void "
+                                    + eventName.substring(0, 1).toLowerCase()
+                                    + eventName.substring(1) + "("
+                                    + translateParameters(strLine)
+                                    + ") {};"
+                                    + todoByRef
+                                    + newline;
+            m_raiseEvents = true;
+            return "";
+        }
+    }
+
+    private String getPropertyType(String strLine) {
+        return getFunctionType(strLine);
+    }
+
+    private String getFunctionType(String strLine) {
+        int endParams = getEndParams(strLine);
+        if (endParams < 0) {
+            return "";
+        }
+        else {
+            if (strLine.length() >= endParams + 2) {
+                strLine = strLine.substring(endParams + 2);
+                String[] words = G.splitSpace(strLine);//strLine.split("\\s+");
+                if (words.length >=2) {
+                    return getDataType(words[1]);
+                }
+                else
+                    return getObjectTypeName();
+            }
+            else
+                return getObjectTypeName();
+        }
+    }
+
+    private String translateParameters(String strLine) {
+        int startParams = getStartParams(strLine);
+        int endParams = getEndParams(strLine);
+
+        if (endParams - startParams > 0) {
+            String params = strLine.substring(startParams + 1, endParams);
+            String[] words = G.split3(params, ",");
+            params = "";
+            for (int i = 0; i < words.length; i++) {
+                params += getParam(words[i]) + ", ";
+            }
+            if (params.isEmpty())
+                return params.trim();
+            else
+                return params.substring(0,params.length()-2).trim();
+        }
+        else
+            return "";
+    }
+
+    private String getParam(String strParam) {
+        String paramName = "";
+        String vbParamName = "";
+        String dataType = getObjectTypeName();
+        String[] words = G.splitSpace(strParam);//strParam.split("\\s+");
+
+        // empty string
+        //
+        if (words.length == 0) {
+            return "";
+        }
+        // param_name
+        //
+        else if (words.length == 1) {
+            vbParamName = words[0];
+            paramName = getParamName(words[0]);
+        }
+        // byval param_name
+        // byref param_name
+        // optional param_name
+        //
+        else if (words.length == 2) {
+            // byval param_name
+            if (words[0].equalsIgnoreCase("ByVal")) {
+                vbParamName = words[1];
+                paramName = getParamName(words[1]);
+            }
+            // byref param_name
+            else if (words[0].equalsIgnoreCase("ByRef")) {
+                vbParamName = words[1];
+                paramName = getParamName(words[1]);
+            }
+            // optional param_name
+            else if (words[0].equalsIgnoreCase("Optional")) {
+                vbParamName = words[1];
+                paramName = getParamName(words[1]);
+            }
+            else
+                return "[*TODO:** param declaration unsuported -> "
+                        + words[0]+ " " + words[1] + "]";
+        }
+        // param_name As param_type
+        // optional byval param_name
+        // optional byref param_name
+        //
+        else if (words.length == 3) {
+            // param_name As param_type
+            if (words[1].equalsIgnoreCase("as")) {
+                dataType = getDataType(words[2]);
+                vbParamName = words[0];
+                paramName = getParamName(words[0]);
+            }
+            // optional byval param_name
+            // optional byref param_name
+            else {
+                vbParamName = words[2];
+                paramName = getParamName(words[2]);
+            }
+        }
+        // byval param_name As param_type
+        // byref param_name As param_type
+        // optional param_name As param_type
+        // optional param_name = default_value
+        //
+        else if (words.length == 4) {
+            // byval param_name As param_type
+            // byref param_name As param_type
+            // optional param_name As param_type
+            if (words[2].equalsIgnoreCase("as")) {
+                dataType = getDataType(words[3]);
+                vbParamName = words[1];
+                paramName = getParamName(words[1]);
+            }
+            // optional param_name = default_value
+            else if (words[2].equalsIgnoreCase("=")) {
+                vbParamName = words[1];
+                paramName = getParamName(words[1]);
+            }
+            else
+                return "[*TODO:** param declaration unsuported -> "
+                        + words[0]+ " " + words[1]
+                        + words[2]+ " " + words[3] + "]";
+        }
+        // byval optional param_name As data_type
+        // byref optional param_name As data_type
+        // byval optional param_name = default_value
+        // byref optional param_name = default_value
+        //
+        else if (words.length == 5) {
+            // byval optional param_name As data_type
+            // byref optional param_name As data_type
+            if (words[3].equalsIgnoreCase("as")) {
+                dataType = getDataType(words[4]);
+                vbParamName = words[2];
+                paramName = getParamName(words[2]);
+            }
+            // byval optional param_name = default_value
+            // byref optional param_name = default_value
+            else if (words[3].equalsIgnoreCase("=")) {
+                vbParamName = words[2];
+                paramName = getParamName(words[2]);
+            }
+            else
+                return "[*TODO:** param declaration unsuported -> "
+                        + words[0]+ " " + words[1]
+                        + words[2]+ " " + words[3]
+                        + words[4]+ "]";
+        }
+        // optional param_name As data_type = default_value
+        //
+        else if (words.length == 6) {
+            // byval optional param_name As data_type
+            // byref optional param_name As data_type
+            if (words[2].equalsIgnoreCase("as")) {
+                dataType = getDataType(words[3]);
+                vbParamName = words[1];
+                paramName = getParamName(words[1]);
+            }
+            else
+                return "[*TODO:** param declaration unsuported -> "
+                        + words[0]+ " " + words[1] 
+                        + words[2]+ " " + words[3]
+                        + words[4]+ " " + words[5] + "]";
+        }
+        // optional byval param_name As data_type = default_value
+        // optional byref param_name As data_type = default_value
+        //
+        else if (words.length == 7) {
+            if (words[3].equalsIgnoreCase("as")) {
+                dataType = getDataType(words[4]);
+                vbParamName = words[2];
+                paramName = getParamName(words[2]);
+            }
+            else
+                return "[*TODO:** param declaration unsuported -> "
+                        + words[0]+ " " + words[1]
+                        + words[2]+ " " + words[3]
+                        + words[4]+ " " + words[5]
+                        + words[6]+ "]";
+        }
+        else
+            return "[*TODO:** param declaration unsuported -> "
+                    + words[0]+ " " + words[1]
+                    + words[2]+ " " + words[3]
+                    + words[4]+ " " + words[5] + "]";
+
+        if (G.endLike(paramName,"()")) {
+            dataType += "[]";
+            paramName = paramName.substring(0, paramName.length()-2);
+        }
+        if (G.endLike(vbParamName, "()")) {
+            vbParamName = vbParamName.substring(0, vbParamName.length()-2);
+        }
+
+        if (m_translateToCairo) {
+            paramName = translateVarNameToCairo(paramName);
+        }
+        
+        paramName = getCairoVariableName(paramName);
+        
+        Variable var = new Variable();
+        var.setJavaName(paramName);
+        var.setVbName(vbParamName);
+        var.setType(dataType);
+        m_functionVariables.add(var);
+
+        saveParam(vbParamName, paramName, dataType);
+        
+        dataType = m_translateToCairo ? "" : dataType;
+
+        return dataType + " " + paramName;
+    }
+
+    private String getParamName(String paramName) {
+        return unCapitalize(paramName);
+    }
+
+    private String getVariableName(String paramName) {
+        return unCapitalize(paramName);
+    }
+
+    private String unCapitalize(String word) {
+        if (word.length() > 0) {
+            if (word.length() > 1) {
+                word = word.substring(0, 1).toLowerCase() + word.substring(1);
+            }
+            else {
+                word = word.toLowerCase();
+            }
+        }
+        return word;
+    }
+    
+    private String capitalize(String word) {
+        if (word.length() > 1) {
+            return word.substring(0,1).toUpperCase() + word.substring(1);
+        }
+        else {
+            return word.toUpperCase();
+        }           
+    }
+
+    private String getDataType(String dataType) {
+        if (dataType.equalsIgnoreCase("byte")) {
+            dataType = "byte";
+        }
+        else if (dataType.equalsIgnoreCase("boolean")) {
+            if (m_translateToJava)
+                dataType = "boolean";
+           else
+                dataType = "bool";
+        }
+        else if (dataType.equalsIgnoreCase("double")) {
+            dataType = "double";
+        }
+        else if (dataType.equalsIgnoreCase("integer")) {
+            dataType = "int";
+        }
+        else if (dataType.equalsIgnoreCase("long")) {
+            // the vb6 long is 32 bit so in java it is an int
+            // if we don't do this, we get a lot of errors
+            // because most of the functions use int as the
+            // type for their parameters and the compiler
+            // complaints every time we send a long as a parameter
+            // to a function which expects an integer
+            //
+            dataType = "int"; 
+        }
+        else if (dataType.equalsIgnoreCase("single")) {
+            dataType = "float";
+        }
+        else if (dataType.equalsIgnoreCase("date")) {
+            addToImportList("import java.util.Date;");
+            dataType = "Date";
+        }
+        else if (dataType.equalsIgnoreCase("string")) {
+            dataType = "String";
+        }
+        else if (dataType.equalsIgnoreCase("variant")) {
+            dataType = getObjectTypeName();
+        }
+        else if (dataType.equalsIgnoreCase("object")) {
+            dataType = getObjectTypeName();
+        }
+        else if (isADODBType(dataType)) {
+            dataType = translateADODBType(dataType);
+        }
+        else if (isVBStandarObject(dataType)) {
+            dataType = translateVBStandarObject(dataType);
+        }
+
+        // else: if is not one of the above list we return
+        // the same value we received
+        //
+        return dataType;
+    }
+
+    private String getDefaultForReturnType(String dataType) {
+        if (dataType.equalsIgnoreCase("byte")) {
+            return "0";
+        }
+        else if (dataType.equalsIgnoreCase("boolean")) {
+            return "false";
+        }
+        else if (dataType.equalsIgnoreCase("double")) {
+            return "0";
+        }
+        else if (dataType.equalsIgnoreCase("int")) {
+            return "0";
+        }
+        else if (dataType.equalsIgnoreCase("long")) {
+            return "0";
+        }
+        else if (dataType.equalsIgnoreCase("float")) {
+            return "0";
+        }
+        else if (dataType.equalsIgnoreCase("Date")) {
+            return "null";
+        }
+        else if (dataType.equalsIgnoreCase("String")) {
+            return "\"\"";
+        }
+        else if (dataType.equalsIgnoreCase("Object")) {
+            return "null";
+        }
+        // else: if is not one of the above list we return
+        // a null string
+        //
+        return "";
+    }
+
+    private String getZeroValueForDataType(String dataType) {
+        if (dataType.equalsIgnoreCase("byte")) {
+            return "0";
+        }
+        else if (dataType.equalsIgnoreCase("boolean")) {
+            return "false";
+        }
+        else if (dataType.equalsIgnoreCase("double")) {
+            return "0";
+        }
+        else if (dataType.equalsIgnoreCase("int")) {
+            return "0";
+        }
+        else if (dataType.equalsIgnoreCase("long")) {
+            return "0";
+        }
+        else if (dataType.equalsIgnoreCase("float")) {
+            return "0";
+        }
+        else if (dataType.equalsIgnoreCase("Date")) {
+            return "null";
+        }
+        else if (dataType.equalsIgnoreCase("String")) {
+            return "\"\"";
+        }
+        else if (dataType.equalsIgnoreCase("Object")) {
+            return "null";
+        }
+        else {
+            return "null";
+        }
+    }
+
+    private int getStartParams(String strLine) {
+        boolean literalFlag = false;
+        for (int i = 0; i < strLine.length(); i++) {
+            if (strLine.charAt(i) == '"') {
+                literalFlag = !literalFlag;
+            }
+            else if (strLine.charAt(i) == '(') {
+                if (!literalFlag) {
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
+
+    private int getEndParams(String strLine) {
+        boolean literalFlag = false;
+        int openParentheses = 0;
+        for (int i = 0; i < strLine.length(); i++) {
+            if (strLine.charAt(i) == '"') {
+                literalFlag = !literalFlag;
+            }
+            if (!literalFlag) {
+                if (strLine.charAt(i) == '(') {
+                    openParentheses++;
+                }
+                else if (strLine.charAt(i) == ')') {
+                    if (openParentheses > 1) {
+                        openParentheses--;
+                    }
+                    else {
+                        return i;
+                    }
+                }
+            }
+        }
+        return -1;
+    }
+
+    private String translatePrivateConstMember(String strLine) {
+        // form is
+            // private const identifier as data_type = value
+            // private const identifier = value
+        strLine = strLine.trim();
+
+        int startComment = getStartComment(strLine);
+        String workLine = strLine;
+        String comments = "";
+        if (startComment >= 0) {
+            comments =  "//" + workLine.substring(startComment);
+            workLine = workLine.substring(0, startComment-1);
+        }
+
+        String[] words = G.splitSpace(workLine);//workLine.split("\\s+");
+        String dataType = "";
+        String identifier = "";
+        String constValue = "";
+
+        // private const identifier as data_type = value
+        //
+        if (words.length > 5) {
+            identifier = words[2];
+            dataType = words[4];
+            constValue = words[6];
+        }
+        // private const identifier = value
+        //
+        else if (words.length == 5) {
+            identifier = words[2];
+            constValue = words[4];
+        }
+        else {
+            return "*" + strLine + newline;
+        }
+        if (dataType.isEmpty()) {
+            if (constValue.charAt(0) == '"') {
+                dataType = "String";
+            }
+            else if (constValue.charAt(0) == '#'){
+                dataType = "Date";
+            }
+            else if (C_NUMBERS.contains(String.valueOf(constValue.charAt(0)))){
+                dataType = "int";
+            }
+            else if (constValue.substring(0,2).equalsIgnoreCase("&h")) {
+                dataType = "int";
+                constValue = "0x" + constValue.substring(2);
+            }
+            else {
+                IdentifierInfo info = null;
+                info = getIdentifierInfo(constValue, "", false);
+                if (info != null) {
+                    if (info.isFunction)
+                        dataType = info.function.getReturnType().dataType;
+                    else
+                        dataType = info.variable.dataType;
+                }
+                else {
+                    return "*TODO:** (the data type can't be found for the value ["
+                            + constValue + "])" + strLine + newline;
+                }
+            }
+        }
+
+        String vbIdentifier = identifier;        
+        identifier = getCairoVariableName(identifier);
+        identifier = identifier.toUpperCase();
+
+        Variable var = new Variable();
+        var.setVbName(vbIdentifier);
+        var.setJavaConstantName(identifier);
+        var.setType(dataType);
+        m_memberVariables.add(var);
+
+        saveVariable(vbIdentifier, identifier, dataType);
+
+        if (m_translateToJava) {
+        
+            return "private static final "
+                    + dataType + " "
+                    + identifier + " = "
+                    + constValue + ";"
+                    + comments + newline;
+        }
+        else {
+            
+            if (m_translateToCairo) {
+                return "var "
+                        + identifier + " = "
+                        + constValue + ";"
+                        + comments + newline;                
+            }
+            else {
+                return "private const "
+                        + dataType + " "
+                        + identifier + " = "
+                        + constValue + ";"
+                        + comments + newline;
+            }
+        }
+    }
+
+    private void saveFunction(String vbIdentifier, String identifier, String dataType) {
+        m_functionObject.setClId(m_classObject.getId());
+        m_functionObject.setVbName(vbIdentifier);
+        m_functionObject.setJavaName(identifier);
+        m_functionObject.setDataType(dataType);
+        m_functionObject.getFunctionIdFromFunctionName();
+        m_functionObject.saveFunction();
+    }
+
+    private void saveParam(String vbParamName, String paramName, String dataType) {
+        saveVariable(vbParamName, paramName, dataType, true, false);
+    }
+    
+    private void saveVariable(String vbIdentifier, String identifier, String dataType) {
+        saveVariable(vbIdentifier, identifier, dataType, false, false);
+    }
+
+    private void saveVariable(String vbIdentifier,
+                                String identifier,
+                                String dataType,
+                                boolean isParameter,
+                                boolean isPublic) {
+
+        m_variableObject.setClId(m_classObject.getId());
+        m_variableObject.setVbName(vbIdentifier);
+        m_variableObject.setJavaName(identifier);
+        m_variableObject.setFunId(m_functionObject.getId());
+        m_variableObject.setDataType(dataType);
+        m_variableObject.setIsParameter(isParameter);
+        m_variableObject.setIsPublic(isPublic);
+        m_variableObject.getVariableIdFromVariableName();
+        m_variableObject.saveVariable();
+    }
+
+    private void saveVariableInType(String vbIdentifier, String identifier, String dataType) {
+        m_variableObject.setClId(m_typeClassObject.getId());
+        m_variableObject.setVbName(vbIdentifier);
+        m_variableObject.setJavaName(identifier);
+        m_variableObject.setFunId(Db.CS_NO_ID);
+        m_variableObject.setDataType(dataType);
+        m_variableObject.setIsParameter(false);
+        m_variableObject.setIsPublic(true);
+        m_variableObject.getVariableIdFromVariableName();
+        m_variableObject.saveVariable();
+    }
+
+    private void saveVariableInEnum(String vbIdentifier, String identifier, String dataType) {
+        m_variableObject.setClId(m_enumClassObject.getId());
+        m_variableObject.setVbName(vbIdentifier);
+        m_variableObject.setJavaName(identifier);
+        m_variableObject.setFunId(Db.CS_NO_ID);
+        m_variableObject.setDataType(dataType);
+        m_variableObject.setIsParameter(false);
+        m_variableObject.setIsPublic(true);
+        m_variableObject.getVariableIdFromVariableName();
+        m_variableObject.saveVariable();
+    }
+
+    private String translatePublicConstMember(String strLine) {
+        // form is
+            // dim variable_name as data_type
+        strLine = strLine.trim();
+        String[] words = G.splitSpace(strLine);//strLine.split("\\s+");
+        String dataType = "";
+        String identifier = "";
+        String constValue = "";
+        String misc = "";
+        
+        
+        // debug
+        /*
+        if (identifier.equals("cscActivo")) {
+            int i = 9999;
+        }        
+         * 
+         * 
+         */
+        if (words.length > 2) {
+            identifier = words[2];
+            if (words.length >= 6) {
+                if (words[4].equals("=")) {
+                    dataType = words[3];
+                    constValue = words[5];                    
+                    for (int i = 6; i < words.length; i++) {
+                        misc += " " + words[i];
+                    }                
+                }
+                else {
+                    if (words.length >= 7) {
+                        if (words[5].equals("=")) {
+                            dataType = words[4];
+                            constValue = words[6];                    
+                            for (int i = 7; i < words.length; i++) {
+                                misc += " " + words[i];
+                            }
+                            
+                        }
+                    }
+                    else {
+                        for (int i = 5; i < words.length; i++) {
+                            misc += " " + words[i];
+                        }
+                    }
+                }
+            }
+            else {
+                return "*" + strLine + newline;
+            }
+        }
+        else {
+            return "*" + strLine + newline;
+        }
+        if (dataType.isEmpty()) {
+            if (constValue.charAt(0) == '"') {
+                dataType = "String";
+            }
+            else if (constValue.charAt(0) == '#'){
+                dataType = "Date";
+            }
+            else if (C_NUMBERS.contains(String.valueOf(constValue.charAt(0)))){
+                dataType = "int";
+            }
+            else if (constValue.substring(0,2).equalsIgnoreCase("&h")) {
+                dataType = "int";
+                constValue = "0x" + constValue.substring(2);
+            }
+            else {
+                IdentifierInfo info = null;
+                info = getIdentifierInfo(constValue, "", false);
+                if (info != null) {
+                    if (info.isFunction)
+                        dataType = info.function.getReturnType().dataType;
+                    else
+                        dataType = info.variable.dataType;
+                }
+                else {
+                    return "*TODO:** (the data type can't be found for the value ["
+                            + constValue + "])" + strLine + newline;
+                }
+            }
+        }
 
