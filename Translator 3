@@ -1,1 +1,999 @@
+private boolean isNextSentence(String strLine) {
+        if (G.beginLike(strLine, "Next ")) {
+            return true;
+        }
+        else {
+            int startComment = getStartComment(strLine);
+            if (startComment >= 0) {
+                strLine = strLine.substring(0, startComment-1);
+            }
+            strLine = G.ltrimTab(strLine);
+            if (strLine.equalsIgnoreCase("Next")) {
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+    }
 
+    private boolean isEndIfSentence(String strLine) {
+        if (G.beginLike(strLine, "End If ")) {
+            return true;
+        }
+        else {
+            int startComment = getStartComment(strLine);
+            if (startComment >= 0) {
+                strLine = strLine.substring(0, startComment-1);
+            }
+            strLine = G.ltrimTab(strLine);
+            if (strLine.equalsIgnoreCase("End If")) {
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+    }
+
+    private boolean isOnErrorSentence(String strLine) {
+        if (G.beginLike(strLine, "On Error ")) {
+            return true;
+        }
+        else {
+            int startComment = getStartComment(strLine);
+            if (startComment >= 0) {
+                strLine = strLine.substring(0, startComment-1);
+            }
+            strLine = G.ltrimTab(strLine);
+            if (strLine.equalsIgnoreCase("On Error")) {
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+    }
+
+    private boolean isOnErrorLabelSentence(String strLine) {
+        if (m_onErrorLabel.isEmpty()) {
+            return false;
+        }
+        else if (G.beginLike(strLine, m_onErrorLabel)) {
+            return true;
+        }
+        else {
+            int startComment = getStartComment(strLine);
+            if (startComment >= 0) {
+                strLine = strLine.substring(0, startComment-1);
+            }
+            strLine = G.ltrimTab(strLine);
+            if (strLine.equalsIgnoreCase(m_onErrorLabel)) {
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+    }
+
+    /*
+    private String translateComments(String strLine) {
+        // We only translate ' in // if the line doesn't contain a // yet
+        // because if the line does, it means that the comments
+        // has already been translated
+        //
+        if (!strLine.contains("//")) {
+            int startComment = getStartComment(strLine);
+            if (startComment >= 0) {
+                strLine = strLine.substring(0, startComment-1)
+                            + " //"
+                            + strLine.substring(startComment);
+            }
+        }
+        return strLine;
+    }
+    */
+
+    private String translateCaseSentence(String strLine) {
+        String switchStatetment = "";
+        boolean identifierHasStarted = false;
+        boolean parenthesesClosed = false;
+        boolean isCaseElse = false;
+        String[] words = G.split(strLine);
+
+        if (m_isFirstCase) {
+            m_isFirstCase = false;
+            switchStatetment = "case ";
+        }
+        else {
+            switchStatetment = "  break;\n\n" + getTabs();
+            if (G.beginLike(strLine, "case else")) {
+                switchStatetment += "default ";
+                isCaseElse = true;
+            }
+            else                
+                switchStatetment += "case ";
+        }
+
+        for (int i = 0; i < words.length; i++) {
+            if (identifierHasStarted) {
+                if (G.beginLike(words[i], "'")) {
+                    switchStatetment += ": //";
+                    parenthesesClosed = true;
+                }
+                if (!parenthesesClosed) {
+                    if (words[i].equals(",")) {
+                        switchStatetment += ":" + newline + getTabs() + "case ";
+                    }
+                    else {
+                        switchStatetment += words[i];
+                    }
+                }
+                else {
+                    switchStatetment += words[i];
+                }
+            }
+            else {
+                if (isCaseElse) {
+                    if (words[i].toLowerCase().equals("else"))
+                        identifierHasStarted = true;                    
+                }
+                else if (words[i].toLowerCase().equals("case"))
+                    identifierHasStarted = true;
+            }
+        }
+        if (!parenthesesClosed) {
+            if (isCaseElse)
+                switchStatetment = G.rtrim(switchStatetment) + ":";
+            else
+                switchStatetment += ":";
+        }
+        if (!G.endLike(switchStatetment.trim(), "default:")) {
+            switchStatetment = replaceVbNameWithJavaName(switchStatetment);
+        }
+        return switchStatetment + newline;
+    }
+
+    private String translateSelectCaseSentence(String strLine) {
+        String switchStatetment = "";
+        boolean identifierHasStarted = false;
+        boolean parenthesesClosed = false;
+        String[] words = G.split(strLine);
+
+        m_isFirstCase = true;
+
+        for (int i = 0; i < words.length; i++) {
+            if (identifierHasStarted) {
+                if (G.beginLike(words[i], "'")) {
+                    switchStatetment += ") { //";
+                    parenthesesClosed = true;
+                }
+                switchStatetment += words[i];
+            }
+            else {
+                if (words[i].toLowerCase().equals("case"))
+                    identifierHasStarted = true;
+            }
+        }
+        switchStatetment = translateSentence(switchStatetment.trim());
+        if (!parenthesesClosed)
+            switchStatetment += ") {";
+        return "switch (" + switchStatetment + newline;
+    }
+
+    private String translateIfSentence(String strLine) {
+        // the if block can contain an or more call sentence
+        // and one or more logic operators and unary operators
+        // binary operators: and, or
+        // unary operator: not
+        //
+        boolean literalFlag = false;
+        boolean thenFound = false;
+        boolean previousWasNot = false;
+        boolean previousWasParentheses = false;
+        boolean isFirstWord = true;
+        String javaSentenceIf = "";
+        String javaSentenceBlock = "";
+        String comments = "";
+
+        int startComment = getStartComment(strLine);
+        if (startComment >= 0) {
+            comments =  "//" + strLine.substring(startComment);
+            strLine = strLine.substring(0, startComment-1);
+        }
+
+        String[] words = G.splitSpace(strLine);//strLine.split("\\s+");
+
+        // we start in 1 because word[0] is "If"
+        //
+        for (int i = 1; i < words.length; i++) {
+            // typical sentence:
+                // " if x then " -> 3 words
+                // " if x and z then " -> 5 words
+                // " if x and callFunction() then " -> 5 words
+                // " if ((x or z) and y) or callFunction(param1, param2, param3)) then " -> too many words :)
+                //
+            // rules
+                // 1- we have to add parentheses
+                // 2- we have to respect parentheses
+                // 3- we have to detect function calls
+                // 4- we have to translate "or", "and", and "not"
+
+            for (int j = 0; j < words[i].length(); j++) {
+                if (words[i].charAt(j) == '"') {
+                    literalFlag = !literalFlag;
+                }
+            }
+
+            if (literalFlag) {
+                if (thenFound) {
+                    javaSentenceBlock += " " + words[i];
+                }
+                else {
+                    javaSentenceIf += " " + words[i];
+                }
+            }
+            else {
+                if (thenFound) {
+                    javaSentenceBlock += " " + words[i];
+                }
+                else {
+                    if (words[i].equalsIgnoreCase("then")) {
+                        thenFound = true;
+                    }
+                    else if (words[i].equalsIgnoreCase("and")) {
+                        javaSentenceIf += " &&";
+                    }
+                    else if (words[i].equalsIgnoreCase(")and")) {
+                        javaSentenceIf += ") &&";
+                    }
+                    else if (words[i].equalsIgnoreCase("and(")) {
+                        javaSentenceIf += " && (";
+                    }
+                    else if (words[i].equalsIgnoreCase("or")) {
+                        javaSentenceIf += " ||";
+                    }
+                    else if (words[i].equalsIgnoreCase(")or")) {
+                        javaSentenceIf += ") ||";
+                    }
+                    else if (words[i].equalsIgnoreCase("or(")) {
+                        javaSentenceIf += " || (";
+                    }
+                    else if (words[i].equalsIgnoreCase("<>")) {
+                        javaSentenceIf += " !=";
+                    }
+                    else if (words[i].equalsIgnoreCase("not")) {
+                        javaSentenceIf += " !";
+                    }
+                    else if (words[i].equals("(")) {
+                        if (previousWasNot)
+                            javaSentenceIf += "(";
+                        else
+                            javaSentenceIf += " (";
+                    }
+                    else if (words[i].equals(")")) {
+                        javaSentenceIf += ")";
+                    }
+                    else if (words[i].equalsIgnoreCase("=")) {
+                        javaSentenceIf += " ==";
+                    }
+                    else {
+                        if (isFirstWord) {
+                            javaSentenceIf += words[i];
+                            isFirstWord = false;
+                        }
+                        else if (previousWasNot || previousWasParentheses) {
+                            javaSentenceIf += words[i];
+                        }
+                        else {
+                            javaSentenceIf += " " + words[i];
+                        }
+                    }
+
+                    // flags
+                    //
+                    if (words[i].equalsIgnoreCase("not")) {
+                        previousWasNot = true;
+                    }
+                    else {
+                        previousWasNot = false;
+                    }
+
+                    if (words[i].charAt(words[i].length()-1) == '(') {
+                        previousWasParentheses = true;
+                    }
+                    else {
+                        previousWasParentheses = false;
+                    }
+                }
+            }
+        }
+        if (javaSentenceBlock.isEmpty()) {
+            return "if (" + translateSentence(javaSentenceIf) + ") {"
+                    + comments + newline;
+        }
+        else {
+            javaSentenceIf = translateSentence(javaSentenceIf);
+            if (m_translateToCairo) {
+                if (javaSentenceBlock.trim().equals("Resume ExitProc")) {
+                    return "";
+                }
+            }
+            javaSentenceBlock = translateSentenceWithColon(G.ltrimTab(javaSentenceBlock));
+            // if "one line if" sentence in vb became two or more sentence
+            // we have to add a tab after every \n to keep the if
+            // indented
+            //
+            if (javaSentenceBlock.contains("\n")) {
+                return comments
+                        + "if (" + javaSentenceIf + ") { " + newline
+                        + getTabs() + C_TAB
+                        + javaSentenceBlock.replace("\n", "\n    ") + newline
+                        + getTabs() + "}"  + newline;
+            }
+            else {
+                return "if (" + javaSentenceIf + ") { "
+                        + javaSentenceBlock
+                        + " }" + comments + newline;
+            }
+        }
+    }
+
+    private String translateElseIfSentence(String strLine) {
+        /*
+        if (m_wasSingleLineIf) {
+            return "else " + translateIfSentence(strLine);
+        }
+        else {
+         * 
+         */
+            return "} "
+                    + newline
+                    + getTabs()
+                    + "else "
+                    + translateIfSentence(strLine);
+        //}
+    }
+
+    private String translateElseSentence(String strLine) {
+        String javaSentenceBlock = "";
+        String comments = "";
+        int startComment = getStartComment(strLine);
+        if (startComment >= 0) {
+            comments =  " //" + strLine.substring(startComment);
+            strLine = strLine.substring(0, startComment-1);
+        }
+        strLine = strLine.trim();
+        if (!strLine.equalsIgnoreCase("Else")) {
+            javaSentenceBlock = " "
+                                + translateSentenceWithColon(G.ltrimTab(strLine.substring(4)))
+                                + " }";
+        }
+        /*
+         * if (m_wasSingleLineIf) {
+            return "else {"
+                    + javaSentenceBlock
+                    + comments
+                    + newline;
+        }
+        else {
+         * 
+         */
+            return "} "
+                    + newline
+                    + getTabs()
+                    + "else {"
+                    + javaSentenceBlock
+                    + comments
+                    + newline;
+        //}
+    }
+
+    private String translateEndIfSentence(String strLine) {
+        int startComment = getStartComment(strLine);
+        if (startComment >= 0) {
+            String comments = "";
+            comments =  "//" + strLine.substring(startComment);
+            return "} " + comments + newline;
+        }
+        else {
+            return "}" + newline;
+        }
+    }
+
+    private String translateEndSelectSentence(String strLine) {
+        int startComment = getStartComment(strLine);
+        if (startComment >= 0) {
+            String comments = "";
+            comments =  "//" + strLine.substring(startComment);
+            return "    break;" + newline + getTabs() + "} " + comments + newline;
+        }
+        else {
+            return "    break;" + newline + getTabs() + "}" + newline;
+        }
+    }
+
+    private String translateExitFunctionSentence(String strLine) {
+        int startComment = getStartComment(strLine);
+        if (startComment >= 0) {
+            String comments = "";
+            comments =  "//" + strLine.substring(startComment);
+            if (m_previousWasReturn)
+                return comments + newline;
+            else
+                if (m_function.getNeedReturnVariable())
+                    return "return _rtn;" + comments + newline;
+                else
+                    return "return null;" + comments + newline;
+        }
+        else {
+            if (m_previousWasReturn) {
+                m_emptyLine = true;
+                return "";
+            }
+            else {
+                if (m_function.getNeedReturnVariable())
+                    return "return _rtn;" + newline;
+                else
+                    return "return null;" + newline;
+            }
+        }
+    }
+
+    private String translateDoWhileSentence(String strLine) {
+        // the 'do while' is a while sentence in java. 
+        // it only exists in vb 6 to allow 'exit do', because
+        // 'exit while' is not a recognized expresion in vb 6
+        //
+        strLine = strLine.substring(3); // remove the do
+        return translateWhileSentence(strLine);
+    }
+
+    private String translateDoSentence(String strLine) {
+        if (strLine.length() > 2)
+            return "do " + strLine.substring(3);
+        else
+            return "do";
+    }
+    
+    private String translateWhileSentence(String strLine) {
+        // the while block can contain an or more call sentence
+        // and one or more logic operators and unary operators
+        // binary operators: and, or
+        // unary operator: not
+        //
+        boolean literalFlag = false;
+        boolean previousWasNot = false;
+        boolean previousWasParentheses = false;
+        boolean isFirstWord = true;
+        String javaSentenceWhile = "";
+        String comments = "";
+
+        int startComment = getStartComment(strLine);
+        if (startComment >= 0) {
+            comments =  "//" + strLine.substring(startComment);
+            strLine = strLine.substring(0, startComment-1);
+        }
+
+        String[] words = G.splitSpace(strLine);//strLine.split("\\s+");
+
+        // we start in 1 because word[0] is "While"
+        //
+        for (int i = 1; i < words.length; i++) {
+            // typical sentence:
+                // " while x " -> 2 words
+                // " while x and z " -> 4 words
+                // " while x and callFunction() " -> 4 words
+                // " while ((x or z) and y) or callFunction(param1, param2, param3)) " -> too many words :)
+                //
+            // rules
+                // 1- we have to add parentheses
+                // 2- we have to respect parentheses
+                // 3- we have to detect function calls
+                // 4- we have to translate "or", "and", and "not"
+
+            for (int j = 0; j < words[i].length(); j++) {
+                if (words[i].charAt(j) == '"') {
+                    literalFlag = !literalFlag;
+                }
+            }
+
+            if (literalFlag) {
+                javaSentenceWhile += " " + words[i];
+            }
+            else {
+                if (words[i].equalsIgnoreCase("and")) {
+                    javaSentenceWhile += " &&";
+                }
+                else if (words[i].equalsIgnoreCase(")and")) {
+                    javaSentenceWhile += ") &&";
+                }
+                else if (words[i].equalsIgnoreCase("and(")) {
+                    javaSentenceWhile += " && (";
+                }
+                else if (words[i].equalsIgnoreCase("or")) {
+                    javaSentenceWhile += " ||";
+                }
+                else if (words[i].equalsIgnoreCase(")or")) {
+                    javaSentenceWhile += ") ||";
+                }
+                else if (words[i].equalsIgnoreCase("or(")) {
+                    javaSentenceWhile += " || (";
+                }
+                else if (words[i].equalsIgnoreCase("<>")) {
+                    javaSentenceWhile += " !=";
+                }
+                else if (words[i].equalsIgnoreCase("not")) {
+                    javaSentenceWhile += " !";
+                }
+                else if (words[i].equals("(")) {
+                    if (previousWasNot)
+                        javaSentenceWhile += "(";
+                    else
+                        javaSentenceWhile += " (";
+                }
+                else if (words[i].equals(")")) {
+                    javaSentenceWhile += ")";
+                }
+                else if (words[i].equalsIgnoreCase("=")) {
+                    javaSentenceWhile += " ==";
+                }
+                else {
+                    if (isFirstWord) {
+                        javaSentenceWhile += words[i];
+                        isFirstWord = false;
+                    }
+                    else if (previousWasNot || previousWasParentheses) {
+                        javaSentenceWhile += words[i];
+                    }
+                    else {
+                        javaSentenceWhile += " " + words[i];
+                    }
+                }
+
+                // flags
+                //
+                if (words[i].equalsIgnoreCase("not")) {
+                    previousWasNot = true;
+                }
+                else {
+                    previousWasNot = false;
+                }
+
+                if (words[i].charAt(words[i].length()-1) == '(') {
+                    previousWasParentheses = true;
+                }
+                else {
+                    previousWasParentheses = false;
+                }
+            }
+        }
+        return "while (" + translateSentence(javaSentenceWhile) + ") {"
+                + comments + newline;
+    }
+
+    private String translateForSentence(String strLine) {
+
+        m_iteratorIndex++;
+
+        // the for block can have three forms:
+        //   for each var in collection
+        //   for var = value_x to value_y
+        //   for var = value_x to value_y step step_value
+        //
+        boolean literalFlag = false;
+        boolean eachFound = false;
+        boolean toFound = false;
+        boolean inFound = false;
+        boolean equalsFound = false;
+        boolean stepFound = false;
+        String iterator = "";
+        String endValue = "";
+        String startValue = "";
+        String increment = "";
+        String step = "";
+        String collection = "";
+        String comments = "";
+
+        int startComment = getStartComment(strLine);
+        if (startComment >= 0) {
+            comments =  "//" + strLine.substring(startComment);
+            strLine = strLine.substring(0, startComment-1);
+        }
+
+        String[] words = G.splitSpace(strLine);//strLine.split("\\s+");
+
+        // we start in 1 because word[0] is "For"
+        //
+        for (int i = 1; i < words.length; i++) {
+            // typical sentence:
+                //   for each var in collection
+                //   for var = value_x to value_y
+                //   for var = value_x to value_y step step_value
+                //
+            // rules
+                // 1- we have to add parentheses
+                // 2- we have to respect parentheses
+                // 3- we have to detect function calls
+
+            for (int j = 0; j < words[i].length(); j++) {
+                if (words[i].charAt(j) == '"') {
+                    literalFlag = !literalFlag;
+                }
+            }
+
+            if (literalFlag) {
+                if (eachFound) {
+                    if (inFound) {
+                        collection += " " + words[i];
+                    }
+                    else {
+                        iterator += " " + words[i];
+                    }
+                }
+                else if (equalsFound) {
+                    if (stepFound) {
+                        step += " " + words[i];
+                    }
+                    else if (toFound) {
+                        endValue += " " + words[i];
+                    }
+                    else {
+                        startValue += " " + words[i];
+                    }
+                }
+                else {
+                    iterator += " " + words[i];
+                }
+            }
+            else {
+                if (eachFound) {
+                    if (inFound) {
+                        collection += " " + words[i];
+                    }
+                    else if (words[i].equalsIgnoreCase("in")) {
+                        inFound = true;
+                    }
+                    else {
+                        iterator += " " + words[i];
+                    }
+                }
+                else if (equalsFound) {
+                    if (stepFound) {
+                        step += " " + words[i];
+                    }
+                    else if (words[i].equalsIgnoreCase("step")) {
+                        stepFound = true;
+                    }
+                    else if (toFound) {
+                        endValue += " " + words[i];
+                    }
+                    else if (words[i].equalsIgnoreCase("to")) {
+                        toFound = true;
+                    }
+                    else {
+                        startValue += " " + words[i];
+                    }
+                }
+                else {
+                    if (words[i].equalsIgnoreCase("each")) {
+                        eachFound = true;
+                    }
+                    else if (words[i].equalsIgnoreCase("=")) {
+                        equalsFound = true;
+                    }
+                    else if (words[i].equals("(")) {
+                        iterator += "(";
+                    }
+                    else if (words[i].equals(")")) {
+                        iterator += ")";
+                    }
+                    else {
+                        iterator += " " + words[i];
+                    }
+                }
+            }
+        }
+        if (eachFound) {
+            collection = translateSentence(collection.trim());
+            Variable varIterator = getVariable(iterator.trim());
+            String dataType = "int";
+            String varCount = "";
+            String varCountDeclaration = "";
+            if (m_translateToCairo) {
+                varCountDeclaration = "var _count = " + collection + ".size();\n" + getTabs();
+                varCount = "_count;";
+                dataType = "var";
+            }
+            else {
+                varCount = collection + ".size();";
+            }
+            return varCountDeclaration 
+                        + "for (" + dataType + " " + m_iterators[m_iteratorIndex] + " = 0;"
+                        + " " + m_iterators[m_iteratorIndex] + " < "
+                        + varCount
+                        + " " + m_iterators[m_iteratorIndex] + "++) {"
+                        + comments + newline
+                        + getTabs() + C_TAB
+                        + varIterator.getJavaName() + " = " + collection 
+                        + ".item(" + m_iterators[m_iteratorIndex] + ");" + newline;
+        }
+        else {
+
+            String forCondition = " <= ";
+            if (step.replace(" ","").equals("+1")) {
+                increment = "++";
+            }
+            else if (step.replace(" ","").equals("-1")) {
+                increment = "--";
+                forCondition = " >= ";
+            }
+            else if (step.isEmpty()) {
+                increment = "++";
+            }
+            else {
+                increment = " = " + iterator + step;
+            }
+            iterator = iterator.trim();
+            startValue = startValue.trim();
+            return "for (" + iterator + " = " + translateSentence(startValue) + "; "
+                            + iterator + forCondition + translateSentence(endValue) + "; "
+                            + iterator + increment + ") {"
+                            + comments + newline;
+        }
+    }
+
+    private String translateLoopUntilWhileSentence(String strLine, boolean isWhile) {
+        // the 'loop while' and the 'loop until' are a while sentence in java. 
+        // it only exists in vb 6 to allow 'exit do', because
+        // 'exit while' is not a recognized expresion in vb 6
+        //
+                                        // remove the 'loop ' in 'loop while' or 'loop until'
+        strLine = translateWhileSentence(strLine.substring(5));
+        if (isWhile)
+            strLine = "} " + strLine;
+        else
+            strLine = "} while !(" + strLine.substring(6) + ")";
+        return strLine;
+    }
+
+    private String translateLoopSentence(String strLine) {
+        int startComment = getStartComment(strLine);
+        if (startComment >= 0) {
+            String comments = "";
+            comments =  "//" + strLine.substring(startComment);
+            return "}" + comments + newline;
+        }
+        else {
+            return "}" + newline;
+        }
+    }
+    
+    private String translateWendSentence(String strLine) {
+        int startComment = getStartComment(strLine);
+        if (startComment >= 0) {
+            String comments = "";
+            comments =  "//" + strLine.substring(startComment);
+            return "}" + comments + newline;
+        }
+        else {
+            return "}" + newline;
+        }
+    }
+
+    private String translateNextSentence(String strLine) {
+
+        m_iteratorIndex--;
+
+        int startComment = getStartComment(strLine);
+        if (startComment >= 0) {
+            String comments = "";
+            comments =  "//" + strLine.substring(startComment);
+            return "} " + comments + newline;
+        }
+        else {
+            return "}" + newline;
+        }
+    }
+
+    private String checkOnErrorLabelFound() {
+        if (!m_onErrorLabel.isEmpty())
+            return "//*TODO:** the error label " + m_onErrorLabel + " couldn't be found" + newline + getTabs();
+        else
+            return "";
+    }
+
+    private String getEndOfPreviousOnError() {
+        if (m_onErrorFound || m_catchBlockIsOpen) {
+            m_catchBlockIsOpen = false;
+            m_tabCount--;            
+            return "}" + newline + getTabs();
+        }
+        else {
+            return "";
+        }
+    }
+
+    private String translateOnErrorSentence(String strLine) {
+        // On Error Goto error_label
+        // On Error Resume Next
+        // On Error Goto 0
+        //
+        String onErrorLabelNotFound = checkOnErrorLabelFound();
+        m_onErrorLabel = "";
+        String comments = "";
+        int startComment = getStartComment(strLine);
+        if (startComment >= 0) {
+            comments =  " //" + strLine.substring(startComment);
+            strLine = strLine.substring(9, startComment).trim();
+        }
+        else
+            strLine = strLine.substring(9).trim();
+
+        String trySentence = "";
+        if (strLine.equalsIgnoreCase("Resume next")) {
+            if (m_translateToCairo) {
+                //m_onErrorFound = false;
+                trySentence = "// **TODO:** on error resume next found !!!";                        
+            }
+            else {
+                trySentence = "try {";            
+            }
+        }
+        else if (G.beginLike(strLine, "GoTo")) {
+            m_onErrorLabel = strLine.substring(5).trim() + ":";
+            trySentence = "try {";
+        }
+
+        String endOfPreviousOnError = getEndOfPreviousOnError();
+
+        return endOfPreviousOnError
+                + onErrorLabelNotFound
+                + trySentence
+                + comments + newline;
+    }
+
+    private String translateOnErrorLabelSentence(String strLine) {
+        m_onErrorLabel = "";
+        String comments = "";
+        int startComment = getStartComment(strLine);
+        if (startComment >= 0) {
+            comments =  " //" + strLine.substring(startComment);
+        }
+        m_onErrorFound = false;
+        m_catchBlockIsOpen = true;
+        if (m_translateToCairo) {
+            return "}\n" + getTabs() + "catch (ex) {" + comments + newline;
+        }
+        else {
+            return "} catch (Exception ex) {" + comments + newline;
+        }
+    }
+
+    private String translateSentenceWithNewLine(String strLine) {
+        strLine = translateSentenceWithColon(strLine);
+        if (strLine.isEmpty()) {
+            return "";
+        }
+        else {
+            return strLine + newline;
+        }
+    }
+
+    private String translateSentenceWithColon(String strLine) {
+        strLine = translateSentence(strLine);
+        /*
+         * 
+        // debug
+        if (!strLine.trim().isEmpty()) {
+            if (strLine.startsWith("/*") && strLine.endsWith("* /")) {
+                return strLine;
+            }
+            else if (";}".contains(strLine.substring(strLine.length() - 1))) {
+                return strLine;
+            }
+        }
+        */
+        if (!strLine.trim().isEmpty()) {
+            return G.rtrim(strLine) + ";";
+        }
+        else {
+            return "";
+        }
+    }
+
+    private String translateSentence(String strLine) {
+        strLine = G.ltrimTab(strLine);
+        int startComment = getStartComment(strLine);
+        if (G.beginLike(strLine,m_vbFunctionName + " = ")) {
+            if (startComment > 0) {
+                String comments = "";
+                comments =  " //" + strLine.substring(startComment);
+                strLine = strLine.substring(0, startComment).trim()
+                            + ";"
+                            + comments;
+            }
+        }
+        if (G.beginLike(strLine,"Set " + m_vbFunctionName + " = ")) {
+            if (startComment > 0) {
+                String comments = "";
+                comments =  " //" + strLine.substring(startComment);
+                strLine = strLine.substring(4, startComment).trim()
+                            + ";"
+                            + comments;
+            }
+            else {
+                strLine = strLine.substring(4);
+            }
+        }
+        // now we replace setences which set the value of return value using
+        // the name of the function like getPrinterName = apiCallGetDefaultPrinter()
+        //
+        strLine = replaceSetReturnValueSentence(strLine);
+
+        if (G.beginLike(strLine,"Set ")) {
+            strLine = strLine.substring(4);
+        }
+        if (G.beginLike(strLine,"Let ")) {
+            strLine = strLine.substring(4);
+        }
+        strLine = replaceMemberVariables(strLine);
+        strLine = replaceFunctionVariables(strLine);
+        strLine = replaceMidSentence(strLine);
+        strLine = replaceTypeOfSentence(strLine);
+        strLine = replaceLeftSentence(strLine);
+        strLine = replaceRightSentence(strLine);
+        strLine = replaceLCaseSentence(strLine);
+        strLine = replaceUCaseSentence(strLine);
+        strLine = replaceLenSentence(strLine);
+        strLine = replaceTrimSentence(strLine);
+        strLine = replaceReplaceSentence(strLine);
+        strLine = translateVbOperators(strLine);
+        if (m_translateToJava) {
+            strLine = replaceStringComparison(strLine, "==");
+            strLine = replaceStringComparison(strLine, "!=");
+            strLine = replaceStringCompareNullString(strLine);
+        }            
+        strLine = replaceInStrSentence(strLine);
+        strLine = replaceVbWords(strLine);
+        strLine = replaceIsNothing(strLine);
+        strLine = replaceNothing(strLine);
+        strLine = replaceAmpersand(strLine);
+        strLine = translateFunctionCall(strLine);
+        strLine = replaceWithSentence(strLine);
+        strLine = replaceEndWithSentence(strLine);
+        strLine = replaceRedimSentence(strLine);
+        strLine = translateWithSentence(strLine);
+        strLine = replaceVbNameWithJavaName(strLine);
+        strLine = replaceExitSentence(strLine);
+        strLine = replaceSlashInLiterals(strLine);
+        strLine = replaceNewSentence(strLine);
+        strLine = replaceRaiseEvent(strLine);
+        strLine = replaceIsNumericSentence(strLine);
+        strLine = replaceCDblSentence(strLine);
+        strLine = replaceCIntSentence(strLine);
+        strLine = replaceCLngSentence(strLine);
+        strLine = replaceCSngSentence(strLine);
+        strLine = replaceCCurSentence(strLine);
+        strLine = replaceCDateSentence(strLine);
+        strLine = replacePropertySetSentence(strLine);
+        strLine = replaceNotSentence(strLine);
+        strLine = replaceADODBSentence(strLine);
+        strLine = replaceResumeSentence(strLine);
+        strLine = replaceGotoSentence(strLine);
+        strLine = replaceLabelSentence(strLine);
+        
+        // this has to be at the end because the ? : sintax
+        // add some complexity that we don't need to process
+        // in any of the previews function
+        //
+        strLine = replaceIifSentence(strLine);
+
+        // this call has to be the last sentences in this function
+        // all the changes have to be done before this call
+        //
+        strLine = checkEventVariableInitialization(strLine);
+
+        return strLine;
+    }
