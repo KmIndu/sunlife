@@ -1,0 +1,13 @@
+1. translateFunctionCall: Translates VB6 function calls to Java, handling different scenarios such as comments, reserved words, and special cases like single-parameter Sub calls.
+2. isReservedWord: Determines if a given word is a reserved word in either Java or VB6 based on the translation context.
+3. replaceMemberVariables: Replaces member variables in a string based on a list of known member variables.
+4. replaceFunctionVariables: Replaces function variables in a string based on a list of known function variables.
+5. putParentheses and related methods: Handles parentheses in expressions, ensuring correct grouping and translation.
+6. containsMathOperators: Checks if a string contains mathematical operators (+, -, *, /).
+7. removeLiterals: Removes string literals from a given string.
+8. replaceAmpersand and related methods: Replaces ampersands (&) in expressions, ensuring proper translation and precedence.
+9. translateVbOperators: Translates VB6 operators like "and," "or," "<>," "not," and parentheses to their Java equivalents.
+replaceStringComparison: Replaces VB6 string comparison expressions with Java equivalents.
+replaceStringCompareNullString: Replaces VB6 string comparisons with an empty string with the Java equivalent for checking emptiness.
+replaceTypeOfSentence: Replaces VB6 TypeOf expressions with their Java equivalents.
+replaceMidSentence, replaceLeftSentence: Replaces VB6 Mid and Left function calls with their Java equivalents.
