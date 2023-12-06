@@ -1,0 +1,378 @@
+ private void parsePublicMember(String strLine) {
+        
+        // debug
+        /*
+        if (strLine.contains("cscActivo")) {
+            int i = 9999;
+        }
+        
+        if (strLine.contains("Debe comunicarse")) {
+            int i = 9999;
+        }
+        */
+        
+        // get out spaces even tabs
+        //
+        String workLine = G.ltrimTab(strLine).toLowerCase();
+        // dim
+        if (workLine.length() > 4) {
+            if (workLine.substring(0,4).equals("dim ")) {
+                return;
+            }
+        }
+        // in declaration
+            // private and public can be modifiers of member variables
+            // or events
+            //
+        if (workLine.length() > 8) {
+            if (workLine.substring(0,8).equals("private ")) {
+                return;
+            }
+        }
+        if (workLine.length() > 7) {
+            if (workLine.substring(0,7).equals("public ")) {
+                if (workLine.contains(" const ")) {
+                    try {
+                        parsePublicConstMember(strLine);
+                    }
+                    catch(Exception e) {
+                        // ignored
+                    }
+                    return;
+                }
+                else if (workLine.contains(" event ")) {
+                    return;
+                }
+                else {
+                    
+                    // form is
+                        // dim variable_name as data_type
+                    strLine = strLine.trim();
+                    String[] words = G.splitSpace(strLine);//strLine.split("\\s+");
+                    String dataType = "";
+                    String identifier = "";
+                    String vbIdentifier = "";
+                    boolean isEventGenerator = false;
+
+                    if (words.length > 1) {
+                        vbIdentifier = words[1];
+                        // with events eg:
+                        //      private withevents my_obj_with_events as CObjetWithEvents ' some comments
+                        //      0       1           2                 3        4          >= 5
+                        //
+                        if (vbIdentifier.equalsIgnoreCase("WithEvents")) {
+                            vbIdentifier = words[2];
+                            identifier = getIdentifier(vbIdentifier);
+                            if (words.length > 4) {
+                                dataType = words[4];
+                            }
+                            isEventGenerator = true;
+                        }
+                        else {
+                            identifier = getIdentifier(vbIdentifier);
+                            if (words.length > 3) {
+                                dataType = words[3];
+                            }
+                        }
+                    }
+                    if (dataType.isEmpty()) {
+                        dataType = getObjectTypeName();
+                    }
+                    dataType = getDataType(dataType);
+
+                    boolean isArray = identifier.endsWith("()");
+                    if (isArray) {
+                        identifier = identifier.substring(0, identifier.length() - 2);
+                    }
+
+                    identifier = getCairoVariableName(identifier);
+                    
+                    Variable var = new Variable();
+                    var.setVbName(vbIdentifier);
+                    var.setJavaName(identifier);
+                    var.className = m_javaClassName;
+                    var.packageName = m_packageName;
+                    var.setType(dataType);
+                    var.isPublic = true;
+                    var.isArray = isArray;
+                    var.isEventGenerator = isEventGenerator;
+                    m_publicVariables.add(var);
+                }
+            }
+        }
+    }
+    
+    private void parsePublicConstMember(String strLine) {
+        // form is
+            // dim variable_name as data_type
+        strLine = strLine.trim();
+        String[] words = G.splitSpace(strLine);//strLine.split("\\s+");
+        String dataType = "";
+        String identifier = "";
+        String constValue = "";
+        String misc = "";
+        
+        
+        // debug
+        /*
+        if (identifier.equals("cscActivo")) {
+            int i = 9999;
+        } 
+         * 
+         */
+
+        if (words.length > 2) {
+            identifier = words[2];
+            if (words.length >= 6) {
+                if (words[4].equals("=")) {
+                    dataType = words[3];
+                    constValue = words[5];                    
+                    for (int i = 6; i < words.length; i++) {
+                        misc += " " + words[i];
+                    }                
+                }
+                else {
+                    if (words.length >= 7) {
+                        if (words[5].equals("=")) {
+                            dataType = words[4];
+                            constValue = words[6];                    
+                            for (int i = 7; i < words.length; i++) {
+                                misc += " " + words[i];
+                            }                            
+                        }                        
+                    }
+                    else {
+                        for (int i = 5; i < words.length; i++) {
+                            misc += " " + words[i];
+                        }
+                    }
+                }
+            }
+            else {
+                return;
+            }
+        }
+        else {
+            return;
+        }
+        if (dataType.isEmpty()) {
+            if (constValue.charAt(0) == '"') {
+                dataType = "String";
+            }
+            else if (constValue.charAt(0) == '#'){
+                dataType = "Date";
+            }
+            else if (C_NUMBERS.contains(String.valueOf(constValue.charAt(0)))){
+                dataType = "int";
+            }
+            else if (constValue.substring(0,2).equalsIgnoreCase("&h")) {
+                dataType = "int";
+                constValue = "0x" + constValue.substring(2);
+            }
+            else {
+                IdentifierInfo info = null;
+                info = getIdentifierInfo(constValue, "", false);
+                if (info != null) {
+                    if (info.isFunction)
+                        dataType = info.function.getReturnType().dataType;
+                    else
+                        dataType = info.variable.dataType;
+                }
+                else {
+                    return;
+                }
+            }
+        }
+
+        String vbIdentifier = identifier;
+        identifier = getCairoVariableName(identifier);
+        identifier = identifier.toUpperCase();        
+        
+        Variable var = new Variable();
+        var.setVbName(vbIdentifier);
+        var.setJavaName(identifier);
+        var.className = m_javaClassName;
+        var.packageName = m_packageName;
+        var.setType(dataType);
+        var.isPublic = true;
+        var.isArray = false;
+        var.isEventGenerator = false;
+        m_publicVariables.add(var);
+    }
+
+    private boolean isCaseSentence(String strLine) {
+        if (G.beginLike(strLine, "Case ")) {
+            return true;
+        }
+        else
+            return false;
+    }
+
+    private boolean isSelectCaseSentence(String strLine) {
+        if (G.beginLike(strLine, "Select Case ")) {
+            return true;
+        }
+        else
+            return false;
+    }
+
+    private boolean isIfSentence(String strLine) {
+        if (G.beginLike(strLine, "If ")) {
+            return true;
+        }
+        else
+            return false;
+    }
+
+    private boolean isDoWhileSentence(String strLine) {
+        if (G.beginLike(strLine, "Do While ")) {
+            return true;
+        }
+        else
+            return false;
+    }
+
+    private boolean isDoSentence(String strLine) {
+        if (strLine.equalsIgnoreCase("Do") || G.beginLike(strLine, "Do ")) {
+            return true;
+        }
+        else
+            return false;
+    }
+
+    private boolean isWhileSentence(String strLine) {
+        if (G.beginLike(strLine, "While ")) {
+            return true;
+        }
+        else
+            return false;
+    }
+
+    private boolean isForSentence(String strLine) {
+        if (G.beginLike(strLine, "For ")) {
+            return true;
+        }
+        else
+            return false;
+    }
+
+    private boolean isElseIfSentence(String strLine) {
+        if (G.beginLike(strLine, "ElseIf ")) {
+            return true;
+        }
+        else
+            return false;
+    }
+
+    private boolean isElseSentence(String strLine) {
+        if (G.beginLike(strLine, "Else ")) {
+            return true;
+        }
+        else {
+            int startComment = getStartComment(strLine);
+            if (startComment >= 0) {
+                strLine = strLine.substring(0, startComment-1);
+            }
+            strLine = G.ltrimTab(strLine);
+            if (strLine.equalsIgnoreCase("Else")) {
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+    }
+
+    private boolean isEndSelectSentence(String strLine) {
+        if (G.beginLike(strLine, "End Select ")) {
+            return true;
+        }
+        else {
+            int startComment = getStartComment(strLine);
+            if (startComment >= 0) {
+                strLine = strLine.substring(0, startComment-1);
+            }
+            strLine = G.ltrimTab(strLine);
+            if (strLine.equalsIgnoreCase("End Select")) {
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+    }
+
+    private boolean isExitFunctionSentence(String strLine) {
+        if (G.beginLike(strLine, "Exit Function ")) {
+            return true;
+        }
+        else {
+            int startComment = getStartComment(strLine);
+            if (startComment >= 0) {
+                strLine = strLine.substring(0, startComment-1);
+            }
+            strLine = G.ltrimTab(strLine);
+            if (strLine.equalsIgnoreCase("Exit Function")) {
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+    }
+
+    private boolean isLoopUntilSentence(String strLine) {
+        if (G.beginLike(strLine, "Loop Until")) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+
+    private boolean isLoopWhileSentence(String strLine) {
+        if (G.beginLike(strLine, "Loop While")) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+
+    private boolean isLoopSentence(String strLine) {
+        if (G.beginLike(strLine, "Loop ")) {
+            return true;
+        }
+        else {
+            int startComment = getStartComment(strLine);
+            if (startComment >= 0) {
+                strLine = strLine.substring(0, startComment-1);
+            }
+            strLine = G.ltrimTab(strLine);
+            if (strLine.equalsIgnoreCase("Loop")) {
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+    }
+    
+    private boolean isWendSentence(String strLine) {
+        if (G.beginLike(strLine, "Wend ")) {
+            return true;
+        }
+        else {
+            int startComment = getStartComment(strLine);
+            if (startComment >= 0) {
+                strLine = strLine.substring(0, startComment-1);
+            }
+            strLine = G.ltrimTab(strLine);
+            if (strLine.equalsIgnoreCase("Wend")) {
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+    }
