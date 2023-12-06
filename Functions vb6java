@@ -11,3 +11,23 @@
 11. replaceStringCompareNullString: Replaces VB6 string comparisons with an empty string with the Java equivalent for checking emptiness.
 12. replaceTypeOfSentence: Replaces VB6 TypeOf expressions with their Java equivalents.
 13. replaceMidSentence, replaceLeftSentence: Replaces VB6 Mid and Left function calls with their Java equivalents.
+
+
+
+
+String Manipulation Functions:
+replaceRightSentence: Replaces "Right" functions with Java's substring or VB.NET's Substring.
+replaceLCaseSentence: Converts "LCase" functions to Java's toLowerCase or VB.NET's ToLower.
+replaceUCaseSentence: Converts "UCase" functions to Java's toUpperCase or VB.NET's ToUpper.
+replaceLenSentence: Replaces "Len" functions with Java's length or VB.NET's Length.
+replaceInStrSentence: Converts "InStr" functions to Java's indexOf or VB.NET's IndexOf.
+replaceReplaceSentence: Transforms "Replace" functions to Java's replace or VB.NET's Replace.
+replaceIifSentence: Replaces "IIf" functions with Java's ternary operator or VB.NET's If statement.
+replaceTrimSentence: Converts "Trim" functions to Java's trim or VB.NET's Trim.
+Type Conversion Functions:
+replaceIsNumericSentence: Handles the "IsNumeric" function, potentially adding an auxiliary function.
+replaceCDblSentence, replaceCIntSentence, replaceCLngSentence, replaceCSngSentence, replaceCCurSentence: Converts numeric casting functions.
+Date Parsing:
+replaceCDateSentence: Transforms "CDate" functions, possibly adding an auxiliary parseDate function.
+Auxiliary Functions:
+Depending on certain conditions (m_AddAuxFunctionsToClass, m_UseGAuxFunctions), it may add auxiliary functions like parseDate or isNumeric to a class or the G class.
