@@ -7,7 +7,7 @@
 7. removeLiterals: Removes string literals from a given string.
 8. replaceAmpersand and related methods: Replaces ampersands (&) in expressions, ensuring proper translation and precedence.
 9. translateVbOperators: Translates VB6 operators like "and," "or," "<>," "not," and parentheses to their Java equivalents.
-replaceStringComparison: Replaces VB6 string comparison expressions with Java equivalents.
-replaceStringCompareNullString: Replaces VB6 string comparisons with an empty string with the Java equivalent for checking emptiness.
-replaceTypeOfSentence: Replaces VB6 TypeOf expressions with their Java equivalents.
-replaceMidSentence, replaceLeftSentence: Replaces VB6 Mid and Left function calls with their Java equivalents.
+10. replaceStringComparison: Replaces VB6 string comparison expressions with Java equivalents.
+11. replaceStringCompareNullString: Replaces VB6 string comparisons with an empty string with the Java equivalent for checking emptiness.
+12. replaceTypeOfSentence: Replaces VB6 TypeOf expressions with their Java equivalents.
+13. replaceMidSentence, replaceLeftSentence: Replaces VB6 Mid and Left function calls with their Java equivalents.
