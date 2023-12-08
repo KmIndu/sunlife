@@ -71,3 +71,38 @@ capitalize: Converts the first character of a string to uppercase.
 getStartParams: Finds the starting index of function parameters in a line.
 getEndParams: Finds the ending index of function parameters in a line.
 
+translateWithSentence->The Java method translates lines of code within a "with" block by substituting dots (.) with the associated variable and handling various cases such as literals and specific character scenarios.
+
+updateLastFieldType->This Java method updates the last data type in an input list representing form data by locating the last occurrence of a closing angle bracket (>) and appending the specified data type after it, separated by a comma and newline.
+
+updateLastParserType->method updates the last parser type in an input list by finding the last occurrence of an opening square bracket ([), replacing it with the specified data type followed by a reference to a parser map field, and appending additional characters.
+
+replaceIdentifierToLowerCase->This Java method replaces occurrences of a specified identifier (case-insensitive) with a given replacement string, ensuring that the replacement maintains the original case for the first letter and converts the rest of the identifier to lowercase within the provided input line.
+
+
+
+writeControllerClassData->This Java method processes lines of code related to controller class data generation, identifying properties and their types based on specific patterns, and updating a string containing field information for a Scala case class.
+
+writeCreateUpdateParamList->This Java method processes lines of code to generate a parameter list for a create/update operation, extracting field names and adding corresponding entries to the parameter list based on specific patterns in the input code.
+
+writeModelCaseClass->This Java method generates Scala case class fields, constructor arguments, and parser mappings by parsing input code related to property definitions, "setValue" method calls, and handling foreign key associations in a specific context.
+
+translateVbOperators->This Java method translates Visual Basic (VB) operators in a given line of code into their equivalent Java operators, handling logical operators ("and," "or"), inequality ("<>"), and negation ("not") while considering parentheses and comments.
+
+translateUbond->This Java method translates Visual Basic's "Ubound" function calls in a given line of code, converting them to their equivalent Java array length expressions while handling nested parentheses.
+
+
+getModelFile->This Java method generates and returns the content of a Scala model file, incorporating various parameters such as class names, field definitions, and imports into the template for both case class and object representations.
+
+getControllerFile->This Java method generates and returns the content of a Scala controller file, incorporating various parameters such as class names, field definitions, and imports into the template for both class and object representations. The generated code includes form data, write data, and parameter lists for create and update operations.
+
+writeControllerWriteData->This Java method processes lines of code related to writing data in a controller class, extracting field names, and generating corresponding entries for a Scala object's write data, considering specific cases such as "setValue" method calls and foreign key associations.
+
+
+writeControllerFormData->This Java method processes lines of code in a controller class, extracting field names and generating corresponding entries for a Scala object's form data, considering specific cases such as "setValue" method calls and handling data types for form input fields.
+
+
+
+writeControllerClassData->This Java method processes lines of code in a controller class, extracting field names and generating corresponding entries for a Scala case class, considering specific cases such as "setValue" method calls and handling data types for fields, including foreign key associations.
+
+replaceIdentifier->This Java method replaces occurrences of a specified identifier (case-insensitive) with a given replacement string, ensuring that the replacement maintains the original case for the first letter and converts the rest of the identifier to uppercase within the provided input line.
