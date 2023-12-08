@@ -44,4 +44,32 @@ getVariable and getMemberVariable: These functions retrieve information about va
 getWordsFromSentence: Splits a sentence into an array of words, considering literals within double quotes and specific symbols.
 isFunctionDeclaration and translateFunctionDeclaration: These functions identify and translate VB6 function declarations. They extract information about the function scope, name, type, and handle special cases like properties.
 
+translateFunction:
+Technical Description: This function translates VB6 functions into Java functions. It handles various function types, scopes, and properties, adjusting their syntax and structure accordingly.
+translateFunctionReturnVariable:
+Technical Description: Manages the translation of the return variable for functions that require one. It handles data types and initializes the return variable if needed.
+getReturnLine:
+Technical Description: Generates the return line for functions that require a return statement. It includes the appropriate syntax and return variable.
+replaceNotSentence:
+Technical Description: Modifies logical "Not" sentences, replacing them with the equivalent "!" symbol for negation.
+replaceResumeSentence:
+Technical Description: Replaces VB6 "Resume" statements with comments indicating the presence of such statements. This helps in identifying and handling error resumption.
+replaceGotoSentence:
+Technical Description: Converts VB6 "GoTo" statements into comments, highlighting their presence for further consideration or modification.
+replaceLabelSentence:
+Technical Description: Handles VB6 labels, marking them as TODO items in comments. This assists in identifying and addressing labeled positions in the code.
+replaceSetReturnValueSentence:
+Technical Description: Manages the setting of return values in functions. It identifies and adjusts assignments to the function name, considering the need for a return variable.
+getIfNeedToBeSynchronized:
+Technical Description: Determines whether a function needs to be synchronized based on its association with raised events. Adds the "synchronized" keyword accordingly.
+translateEventDeclaration:
+Technical Description: Translates VB6 event declarations into Java listener interface and adapter class declarations. Handles various event scopes and generates the necessary Java code.
+getPropertyType:
+Technical Description: Determines the data type of a property based on its declaration in VB6. It utilizes the getFunctionType method for this purpose.
+getFunctionType:
+Technical Description: Identifies the data type of a function based on its declaration in VB6. It considers parameters and return types, providing the appropriate Java data type.
+translateParameters:
+Technical Description: Translates VB6 function parameters into Java syntax. It considers various parameter declarations, including ByVal, ByRef, and Optional.
+getParam:
+Technical Description: Handles individual function parameters, determining their names, data types, and optional status. Utilizes information from the VB6 parameter declaration.
 
