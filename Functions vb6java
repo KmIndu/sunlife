@@ -12,7 +12,21 @@
 12. replaceTypeOfSentence: Replaces VB6 TypeOf expressions with their Java equivalents.
 13. replaceMidSentence, replaceLeftSentence: Replaces VB6 Mid and Left function calls with their Java equivalents.
 
-
+replaceRightSentence: Replaces VB's Right function with Java's substring for string manipulation, handling potential nested function calls and complex expressions.
+replaceLCaseSentence: Converts VB's LCase function to Java's toLowerCase for case conversion, managing nested calls and complex expressions.
+replaceUCaseSentence: Translates VB's UCase function to Java's toUpperCase for uppercase conversion, handling nested calls and complex expressions.
+replaceLenSentence: Replaces VB's Len function with Java's length for string length retrieval, managing nested calls and complex expressions.
+replaceInStrSentence: Converts VB's InStr function to Java's indexOf for string search, handling various parameter combinations and complex expressions.
+replaceReplaceSentence: Translates VB's Replace function to Java's replace method for string replacement, handling nested calls and complex expressions.
+replaceIifSentence: Replaces VB's IIf function with the Java ternary operator ? : for conditional statements, managing nested calls and complex expressions.
+replaceTrimSentence: Converts VB's Trim function to Java's trim for whitespace removal, handling nested calls and complex expressions.
+replaceIsNumericSentence: Replaces VB's IsNumeric function with an auxiliary Java function or G.isNumeric for checking numeric values.
+replaceCDblSentence: Translates VB's CDbl function to Java's Double.parseDouble for converting to double.
+replaceCIntSentence: Converts VB's CInt function to Java's Integer.parseInt for converting to integer.
+replaceCLngSentence: Translates VB's CLng function to Java's Long.parseLong for converting to long.
+replaceCSngSentence: Replaces VB's CSng function with Java's Double.parseDouble for converting to single.
+replaceCCurSentence: Converts VB's CCur function to Java's Double.parseDouble for converting to currency.
+replaceCDateSentence: Translates VB's CDate function to an auxiliary Java function or G.parseDate for date conversion.
 
 
 String Manipulation Functions:
