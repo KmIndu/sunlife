@@ -26,7 +26,25 @@ replaceCIntSentence: Converts VB's CInt function to Java's Integer.parseInt for 
 replaceCLngSentence: Translates VB's CLng function to Java's Long.parseLong for converting to long.
 replaceCSngSentence: Replaces VB's CSng function with Java's Double.parseDouble for converting to single.
 replaceCCurSentence: Converts VB's CCur function to Java's Double.parseDouble for converting to currency.
-replaceCDateSentence: Translates VB's CDate function to an auxiliary Java function or G.parseDate for date conversion.
+replaceCDateSentence: Translates VB's CDate function to an auxiliary Java function or G.parseDate for date 
+
+replaceOneParamFunction: Iterates through the input expression, identifying occurrences of the specified VB6 function. Handles nested calls by recursively replacing inner function calls. Reconstructs the expression with the Java equivalent function and its parameters, ensuring proper conversion of function calls.
+containsTypeOf: Performs case-insensitive checks within the expression to identify the presence of VB6 TypeOf. Utilizes string manipulation to accurately detect these occurrences, assisting in the precise conversion to Java.
+containsMid, containsLeft, containsRight: Employs toLowerCase() and contains() methods to identify VB6 string manipulation functions within the expression. Captures variations and forms of these functions, ensuring comprehensive recognition for accurate Java conversion.
+containsLCase, containsUCase, containsLen: Utilizes similar string manipulation techniques to identify VB6 string functions. Recognizes variations and formats, enabling precise conversion of these functions to their Java equivalents.
+containsTrim, containsInStr, containsReplace, containsIif: Leverages string methods and conditional checks to detect specific VB6 functions. Ensures accurate identification and subsequent conversion to Java equivalents, preserving the intended functionality.
+containsFunction: Employs case-insensitive checks and string manipulation to determine if a particular VB6 function is present in the expression. Provides a crucial mechanism for identifying functions during the conversion process.
+replaceVbWords: Iterates through an array of words in the expression, replacing VB6-specific terms with their Java equivalents. Ensures consistent terminology in the converted code, enhancing readability and maintaining code integrity.
+processEqualsSentence: Handles equality and inequality operations, especially for string comparisons. Accounts for different scenarios, such as string expressions, to construct Java-equivalent expressions that maintain the intended logic during the conversion.
+
+
+
+
+
+
+
+
+
 
 
 String Manipulation Functions:
