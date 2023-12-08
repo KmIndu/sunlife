@@ -54,4 +54,20 @@ getPropertyType: Determines the data type of a property based on its declaration
 getFunctionType: Identifies the data type of a function based on its declaration in VB6. It considers parameters and return types, providing the appropriate Java data type.
 translateParameters: Translates VB6 function parameters into Java syntax. It considers various parameter declarations, including ByVal, ByRef, and Optional.
 getParam: Handles individual function parameters, determining their names, data types, and optional status. Utilizes information from the VB6 parameter declaration.
+getZeroValueForDataType: Returns the zero value for a given data type, which is used for initializing variables.
+getDataType: Translates VB6 data types to their equivalent Java data types.
+getDefaultForReturnType: Returns the default value for a given data type, used in function return statements.
+getVariableName: Returns a variable name in a camelCase format.
+getParamName: Returns a parameter name in a camelCase format.
+translatePrivateConstMember: Translates a private constant member declaration from VB6 to Java, handling data type conversion and saving the constant.
+saveFunction: Saves function details (name, type, scope) into a database.
+saveParam: Saves parameter details (name, type) into a database.
+saveVariable: Saves variable details (name, type, scope) into a database.
+saveVariableInType: Saves variable details within a specific type or class.
+saveVariableInEnum: Saves variable details within an enumeration.
+translatePublicConstMember: Translates a public constant member declaration from VB6 to Java, handling data type conversion and saving the constant.
+unCapitalize: Converts the first character of a string to lowercase.
+capitalize: Converts the first character of a string to uppercase.
+getStartParams: Finds the starting index of function parameters in a line.
+getEndParams: Finds the ending index of function parameters in a line.
 
