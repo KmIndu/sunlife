@@ -37,6 +37,12 @@ containsFunction: Employs case-insensitive checks and string manipulation to det
 replaceVbWords: Iterates through an array of words in the expression, replacing VB6-specific terms with their Java equivalents. Ensures consistent terminology in the converted code, enhancing readability and maintaining code integrity.
 processEqualsSentence: Handles equality and inequality operations, especially for string comparisons. Accounts for different scenarios, such as string expressions, to construct Java-equivalent expressions that maintain the intended logic during the conversion.
 
+getCastToString: This function handles the conversion of different variable types to strings in Java. It checks the variable type and constructs the appropriate Java code to convert it to a string, considering scenarios like Long, Int, Boolean, and complex expressions.
+getIdentifierInfo: It extracts information about an identifier (variable or function) within an expression. It handles nested parentheses, identifying the type of the identifier and its parent type, providing valuable information for subsequent conversion.
+isComplexExpression: Determines whether an expression is complex by checking for the presence of arithmetic operators like +, -, *, and /.
+getVariable and getMemberVariable: These functions retrieve information about variables, considering class names and database references. They navigate through various scopes, including function variables, member variables, private types, and public variables declared in bas files.
+getWordsFromSentence: Splits a sentence into an array of words, considering literals within double quotes and specific symbols.
+isFunctionDeclaration and translateFunctionDeclaration: These functions identify and translate VB6 function declarations. They extract information about the function scope, name, type, and handle special cases like properties.
 
 
 
