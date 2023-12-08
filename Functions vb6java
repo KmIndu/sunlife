@@ -11,7 +11,6 @@ replaceStringComparison: Replaces VB6 string comparison expressions with Java eq
 replaceStringCompareNullString: Replaces VB6 string comparisons with an empty string with the Java equivalent for checking emptiness.
 replaceTypeOfSentence: Replaces VB6 TypeOf expressions with their Java equivalents.
 replaceMidSentence, replaceLeftSentence: Replaces VB6 Mid and Left function calls with their Java equivalents.
-
 replaceRightSentence: Replaces VB's Right function with Java's substring for string manipulation, handling potential nested function calls and complex expressions.
 replaceLCaseSentence: Converts VB's LCase function to Java's toLowerCase for case conversion, managing nested calls and complex expressions.
 replaceUCaseSentence: Translates VB's UCase function to Java's toUpperCase for uppercase conversion, handling nested calls and complex expressions.
@@ -27,7 +26,6 @@ replaceCLngSentence: Translates VB's CLng function to Java's Long.parseLong for 
 replaceCSngSentence: Replaces VB's CSng function with Java's Double.parseDouble for converting to single.
 replaceCCurSentence: Converts VB's CCur function to Java's Double.parseDouble for converting to currency.
 replaceCDateSentence: Translates VB's CDate function to an auxiliary Java function or G.parseDate for date 
-
 replaceOneParamFunction: Iterates through the input expression, identifying occurrences of the specified VB6 function. Handles nested calls by recursively replacing inner function calls. Reconstructs the expression with the Java equivalent function and its parameters, ensuring proper conversion of function calls.
 containsTypeOf: Performs case-insensitive checks within the expression to identify the presence of VB6 TypeOf. Utilizes string manipulation to accurately detect these occurrences, assisting in the precise conversion to Java.
 containsMid, containsLeft, containsRight: Employs toLowerCase() and contains() methods to identify VB6 string manipulation functions within the expression. Captures variations and forms of these functions, ensuring comprehensive recognition for accurate Java conversion.
@@ -36,40 +34,24 @@ containsTrim, containsInStr, containsReplace, containsIif: Leverages string meth
 containsFunction: Employs case-insensitive checks and string manipulation to determine if a particular VB6 function is present in the expression. Provides a crucial mechanism for identifying functions during the conversion process.
 replaceVbWords: Iterates through an array of words in the expression, replacing VB6-specific terms with their Java equivalents. Ensures consistent terminology in the converted code, enhancing readability and maintaining code integrity.
 processEqualsSentence: Handles equality and inequality operations, especially for string comparisons. Accounts for different scenarios, such as string expressions, to construct Java-equivalent expressions that maintain the intended logic during the conversion.
-
 getCastToString: This function handles the conversion of different variable types to strings in Java. It checks the variable type and constructs the appropriate Java code to convert it to a string, considering scenarios like Long, Int, Boolean, and complex expressions.
 getIdentifierInfo: It extracts information about an identifier (variable or function) within an expression. It handles nested parentheses, identifying the type of the identifier and its parent type, providing valuable information for subsequent conversion.
 isComplexExpression: Determines whether an expression is complex by checking for the presence of arithmetic operators like +, -, *, and /.
 getVariable and getMemberVariable: These functions retrieve information about variables, considering class names and database references. They navigate through various scopes, including function variables, member variables, private types, and public variables declared in bas files.
 getWordsFromSentence: Splits a sentence into an array of words, considering literals within double quotes and specific symbols.
 isFunctionDeclaration and translateFunctionDeclaration: These functions identify and translate VB6 function declarations. They extract information about the function scope, name, type, and handle special cases like properties.
-
-translateFunction:
-Technical Description: This function translates VB6 functions into Java functions. It handles various function types, scopes, and properties, adjusting their syntax and structure accordingly.
-translateFunctionReturnVariable:
-Technical Description: Manages the translation of the return variable for functions that require one. It handles data types and initializes the return variable if needed.
-getReturnLine:
-Technical Description: Generates the return line for functions that require a return statement. It includes the appropriate syntax and return variable.
-replaceNotSentence:
-Technical Description: Modifies logical "Not" sentences, replacing them with the equivalent "!" symbol for negation.
-replaceResumeSentence:
-Technical Description: Replaces VB6 "Resume" statements with comments indicating the presence of such statements. This helps in identifying and handling error resumption.
-replaceGotoSentence:
-Technical Description: Converts VB6 "GoTo" statements into comments, highlighting their presence for further consideration or modification.
-replaceLabelSentence:
-Technical Description: Handles VB6 labels, marking them as TODO items in comments. This assists in identifying and addressing labeled positions in the code.
-replaceSetReturnValueSentence:
-Technical Description: Manages the setting of return values in functions. It identifies and adjusts assignments to the function name, considering the need for a return variable.
-getIfNeedToBeSynchronized:
-Technical Description: Determines whether a function needs to be synchronized based on its association with raised events. Adds the "synchronized" keyword accordingly.
-translateEventDeclaration:
-Technical Description: Translates VB6 event declarations into Java listener interface and adapter class declarations. Handles various event scopes and generates the necessary Java code.
-getPropertyType:
-Technical Description: Determines the data type of a property based on its declaration in VB6. It utilizes the getFunctionType method for this purpose.
-getFunctionType:
-Technical Description: Identifies the data type of a function based on its declaration in VB6. It considers parameters and return types, providing the appropriate Java data type.
-translateParameters:
-Technical Description: Translates VB6 function parameters into Java syntax. It considers various parameter declarations, including ByVal, ByRef, and Optional.
-getParam:
-Technical Description: Handles individual function parameters, determining their names, data types, and optional status. Utilizes information from the VB6 parameter declaration.
+translateFunction: This function translates VB6 functions into Java functions. It handles various function types, scopes, and properties, adjusting their syntax and structure accordingly.
+translateFunctionReturnVariable: Manages the translation of the return variable for functions that require one. It handles data types and initializes the return variable if needed.
+getReturnLine: Generates the return line for functions that require a return statement. It includes the appropriate syntax and return variable.
+replaceNotSentence: Modifies logical "Not" sentences, replacing them with the equivalent "!" symbol for negation.
+replaceResumeSentence: Replaces VB6 "Resume" statements with comments indicating the presence of such statements. This helps in identifying and handling error resumption.
+replaceGotoSentence: Converts VB6 "GoTo" statements into comments, highlighting their presence for further consideration or modification.
+replaceLabelSentence: Handles VB6 labels, marking them as TODO items in comments. This assists in identifying and addressing labeled positions in the code.
+replaceSetReturnValueSentence: Manages the setting of return values in functions. It identifies and adjusts assignments to the function name, considering the need for a return variable.
+getIfNeedToBeSynchronized: Determines whether a function needs to be synchronized based on its association with raised events. Adds the "synchronized" keyword accordingly.
+translateEventDeclaration: Translates VB6 event declarations into Java listener interface and adapter class declarations. Handles various event scopes and generates the necessary Java code.
+getPropertyType: Determines the data type of a property based on its declaration in VB6. It utilizes the getFunctionType method for this purpose.
+getFunctionType: Identifies the data type of a function based on its declaration in VB6. It considers parameters and return types, providing the appropriate Java data type.
+translateParameters: Translates VB6 function parameters into Java syntax. It considers various parameter declarations, including ByVal, ByRef, and Optional.
+getParam: Handles individual function parameters, determining their names, data types, and optional status. Utilizes information from the VB6 parameter declaration.
 
