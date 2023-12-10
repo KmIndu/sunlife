@@ -1,0 +1,555 @@
+// server: SCALA CODE
+
+    /*
+     
+     * CONTROLLER
+     
+     */
+    
+    private static final String m_controllerImports = 
+            "import controllers._\n"
+          + "import play.api.mvc._\n"
+          + "import play.api.data._\n"
+          + "import play.api.data.Forms._\n"
+          + "import actions._\n"
+          + "import play.api.Logger\n"
+          + "import play.api.libs.json._\n"
+          + "import models.cairo.modules.general._\n"
+          + "import models.cairo.system.security.CairoSecurity\n"
+          + "import models.cairo.system.database.DBHelper\n";
+
+    private String m_controllerClassData = "case class XxxzData(\n              id: Option[Int],\nCASE-CLASS-FIELDS\n              )";
+    
+    private String m_controllerObject = 
+          "object Xxxzs extends Controller with ProvidesUser {\n\n"
+            
+        + "  val xxxzForm = Form(\n"
+        + "    mapping(\n"
+        + "[FORM-DATA]"   
+        + "  )(XxxzData.apply)(XxxzData.unapply))\n\n"   
+
+        + "  implicit val xxxzWrites = new Writes[Xxxz] {\n"
+        + "    def writes(xxxz: Xxxz) = Json.obj(\n"
+        + "[WRITES-DATA]"   
+        + "    )\n"   
+        + "  }\n\n"   
+            
+        + "  def get(id: Int) = GetAction { implicit request =>\n"
+        + "    LoggedIntoCompanyResponse.getAction(request, CairoSecurity.hasPermissionTo(S.LIST_XXXZ), { user =>\n"
+        + "      Ok(Json.toJson(Xxxz.get(user, id)))\n"
+        + "    })\n"
+        + "  }\n\n"
+
+        + "  def update(id: Int) = PostAction { implicit request =>\n"
+        + "    Logger.debug(\"in xxxzs.update\")\n"
+        + "    xxxzForm.bindFromRequest.fold(\n"
+        + "      formWithErrors => {\n"
+        + "        Logger.debug(s\"invalid form: ${formWithErrors.toString}\")\n"
+        + "        BadRequest\n"
+        + "      },\n"
+        + "      xxxz => {\n"
+        + "        Logger.debug(s\"form: ${xxxz.toString}\")\n"
+        + "        LoggedIntoCompanyResponse.getAction(request, CairoSecurity.hasPermissionTo(S.EDIT_XXXZ), { user =>\n"
+        + "          Ok(\n"
+        + "            Json.toJson(\n"
+        + "              Xxxz.update(user,\n" 
+        + "                Xxxz(\n"
+        + "                       id,\n"
+        + "[UPDATE-PARAM-LIST]\n"
+        + "                ))))\n"
+        + "        })\n"
+        + "      }\n"
+        + "    )\n"
+        + "  }\n\n"
+
+        + "  def create = PostAction { implicit request =>\n"
+        + "    Logger.debug(\"in xxxzs.create\")\n"
+        + "    xxxzForm.bindFromRequest.fold(\n"
+        + "      formWithErrors => {\n"
+        + "        Logger.debug(s\"invalid form: ${formWithErrors.toString}\")\n"
+        + "        BadRequest\n"
+        + "      },\n"
+        + "      xxxz => {\n"
+        + "        Logger.debug(s\"form: ${xxxz.toString}\")\n"
+        + "        LoggedIntoCompanyResponse.getAction(request, CairoSecurity.hasPermissionTo(S.NEW_XXXZ), { user =>\n"
+        + "          Ok(\n"
+        + "            Json.toJson(\n"
+        + "              Xxxz.create(user,\n"
+        + "                Xxxz(\n"
+        + "[CREATE-PARAM-LIST]\n"
+        + "                ))))\n"
+        + "        })\n"
+        + "      }\n"
+        + "    )\n"
+        + "  }\n\n"
+
+        + "  def delete(id: Int) = PostAction { implicit request =>\n"
+        + "    Logger.debug(\"in xxxzs.delete\")\n"
+        + "    LoggedIntoCompanyResponse.getAction(request, CairoSecurity.hasPermissionTo(S.DELETE_XXXZ), { user =>\n"
+        + "      Xxxz.delete(user, id)\n"
+        + "      // Backbonejs requires at least an empty json object in the response\n"
+        + "      // if not it will call errorHandler even when we responded with 200 OK :P\n"
+        + "      Ok(JsonUtil.emptyJson)\n"
+        + "    })\n"
+        + "  }\n\n"            
+        + "}";            
+
+    private String m_caseClassDataFields = "";
+    private String m_caseClassPrefix = "";
+    private String m_caseClassDataLastField = "";
+    private boolean m_discardProperty = false;
+    private String m_discardedProperties = "";
+    private boolean m_setIdFound = false;
+    
+    private void writeControllerClassData(String strLine) {
+      if (strLine.contains("var elem = properties.add(null")) {
+         m_setValueFound = false;
+         if (strLine.contains("var elem = properties.add(null, Cairo.General.Constants.")) {
+            m_discardProperty = false; 
+            m_setIdFound = false;
+                    
+            m_caseClassDataLastField = strLine.trim().replace("var elem = properties.add(null, Cairo.General.Constants.", "");
+            m_caseClassDataLastField = m_caseClassDataLastField.substring(0, m_caseClassDataLastField.indexOf(")"));
+
+            if (m_caseClassPrefix.isEmpty()) {
+                m_caseClassPrefix = m_caseClassDataLastField.substring(0, m_caseClassDataLastField.indexOf("_") + 1);
+            }
+
+            if (m_caseClassDataLastField.startsWith(m_caseClassPrefix)) {
+              m_caseClassDataLastField = m_caseClassDataLastField.substring(m_caseClassPrefix.length());
+            }
+
+            m_caseClassDataLastField = toCamel(m_caseClassDataLastField);
+
+            m_caseClassDataFields += "              " + m_caseClassDataLastField + ": ";
+         }
+         else if (strLine.contains("var elem = properties.add(null, Cairo.Constants.ACTIVE")) {
+             m_discardProperty = false;
+             m_setIdFound = false;
+         }
+         else {
+             m_discardProperty = true;
+             m_discardedProperties += strLine + "\n";
+         }
+      }
+      else if (strLine.contains("var elem = properties.add(null, Cairo.Constants.ACTIVE")) {
+          // nothing to do
+      }
+      else if(strLine.contains("setValue") && ! m_discardProperty) {
+          m_setValueFound = true;
+          String expression = strLine.substring(strLine.indexOf("(") + 1, strLine.indexOf(")"));
+          if (expression.equals("m_active === true ? 1 : 0")) {
+              m_caseClassDataFields += "              active: Boolean,\n";
+          }
+          else {
+            if (! m_setIdFound) {  
+                IdentifierInfo info = getIdentifierInfo(getVariableFromExpression(expression));
+                if (info != null) {
+                    String dataType = info.variable != null ? info.variable.dataType : info.function.getReturnType().dataType;
+                    m_caseClassDataFields += getScalaType(dataType) + ",\n";
+                }
+                else {
+                    int debug = 1;
+                }
+            }
+          }
+      }      
+      else if(strLine.contains("setSelectId")) {
+          m_setIdFound = true;
+          m_caseClassDataFields = updateLastFieldType(m_caseClassDataFields, "Int");
+      }
+    }
+    
+    private String getVariableFromExpression(String variable) {
+        try {
+            for (int i = variable.length()-2; i > 0; i--) {
+                if (variable.charAt(i) == '(') {
+                    variable = variable.substring(i+1);
+                    break;
+                }
+            }
+            return variable;
+        }
+        catch(RuntimeException e) {
+            return "";
+        }
+    }
+    
+    private String updateLastFieldType(String list, String dataType) {
+        for (int i = list.length()-1; i > 0; i--) {
+            if (list.charAt(i) == ':') {
+                list = list.substring(0, i + 2) + dataType + ",\n";
+                break;
+            }
+        }
+        return list;
+    }
+    
+    private String m_formDataLastField = "";
+    private String m_formData = "";
+    
+    private void writeControllerFormData(String strLine) {
+        if (strLine.contains("var elem = properties.add(null, Cairo.General.Constants.")) {
+            m_formDataLastField = strLine.trim().replace("var elem = properties.add(null, Cairo.General.Constants.", "");
+            m_formDataLastField = m_formDataLastField.substring(0, m_formDataLastField.indexOf(")"));
+            m_formData += "      C." + m_formDataLastField + " -> ";
+        } else if (strLine.contains("setValue") && ! m_discardProperty) {
+            String expression = strLine.substring(strLine.indexOf("(") + 1, strLine.indexOf(")"));
+            if (expression.equals("m_active === true ? 1 : 0")) {
+                m_formData += "      DBHelper.ACTIVE -> boolean,\n";
+            } else if (expression.equals("m_name")) {
+                m_formData += "nonEmptyText,\n";
+            } else {
+                if (! m_setIdFound) {
+                    IdentifierInfo info = getIdentifierInfo(getVariableFromExpression(expression));
+                    if (info != null) {
+                        String dataType = info.variable != null ? info.variable.dataType : info.function.getReturnType().dataType;
+                        m_formData += getFormType(dataType) + ",\n";
+                    }
+                    else {
+                        int debug = 1;
+                    }
+                }
+            }
+        }
+        else if(strLine.contains("setSelectId")) {
+            m_formData = updateFormDataLastFieldType(m_formData, "number");
+        }        
+    }
+    
+    private String updateFormDataLastFieldType(String list, String dataType) {
+        for (int i = list.length()-1; i > 0; i--) {
+            if (list.charAt(i) == '>') {
+                list = list.substring(0, i + 2) + dataType + ",\n";
+                break;
+            }
+        }
+        return list;
+    }
+    
+    private String m_writeDataLastField = "";
+    private String m_writeData = "";
+    private String m_writeDataLastField2 = "";
+    private String m_writeDataFkBuffer = "";
+    private boolean m_setValueFound = false;
+    
+    private void writeControllerWriteData(String strLine) {
+        if (strLine.contains("var elem = properties.add(null, Cairo.General.Constants.")) {
+            m_writeDataLastField = strLine.trim().replace("var elem = properties.add(null, Cairo.General.Constants.", "");
+            m_writeDataLastField = m_writeDataLastField.substring(0, m_writeDataLastField.indexOf(")"));
+            m_writeData += "      C." + m_writeDataLastField + " -> ";
+            
+            m_writeDataLastField2 = strLine.trim().replace("var elem = properties.add(null, Cairo.General.Constants.", "");
+            m_writeDataLastField2 = m_writeDataLastField2.substring(0, m_writeDataLastField2.indexOf(")"));
+
+            if (m_caseClassPrefix.isEmpty()) {
+                m_caseClassPrefix = m_caseClassDataLastField.substring(0, m_caseClassDataLastField.indexOf("_") + 1);
+            }
+
+            if (m_writeDataLastField2.startsWith(m_caseClassPrefix)) {
+              m_writeDataLastField2 = m_writeDataLastField2.substring(m_caseClassPrefix.length());
+            }
+
+            m_writeDataLastField2 = toCamel(m_writeDataLastField2);
+            
+        } else if (strLine.contains("setValue") && ! m_discardProperty) {
+            String expression = strLine.substring(strLine.indexOf("(") + 1, strLine.indexOf(")"));
+            if (expression.equals("m_active === true ? 1 : 0")) {
+                m_writeData += "      DBHelper.ACTIVE -> Json.toJson(xxxz.active),\n";
+            } else {
+                IdentifierInfo info = getIdentifierInfo(getVariableFromExpression(expression));
+                if (info != null) {
+                    m_writeData += "Json.toJson(xxxz." + m_writeDataLastField2 + "),\n" + m_writeDataFkBuffer;
+                    m_writeDataFkBuffer = "";
+                }
+                else {
+                    int debug = 1;
+                }                    
+            }
+        }
+        else if(strLine.contains("setSelectId")) {
+            
+            if(!m_writeDataLastField.isEmpty()) {
+                String prefix = m_writeDataLastField.substring(0, m_writeDataLastField.indexOf("_"));
+
+                String jsonLine = "      C." + prefix
+                        + "_NAME -> Json.toJson(xxxz." 
+                        + prefix.toLowerCase() + "Name),\n";
+                if (m_setValueFound) {
+                    m_writeData += jsonLine;
+                    m_writeDataFkBuffer = "";
+                }
+                else {
+                    m_writeDataFkBuffer = jsonLine;
+                }
+            }
+        }
+    }
+    
+    private String m_createUpdateParamList = "";
+    private String m_paramListLastField = "";
+    
+    private void writeCreateUpdateParamList(String strLine) {
+        if (strLine.contains("var elem = properties.add(null, Cairo.General.Constants.")) {
+            m_paramListLastField = strLine.trim().replace("var elem = properties.add(null, Cairo.General.Constants.", "");
+            m_paramListLastField = m_paramListLastField.substring(0, m_paramListLastField.indexOf(")"));
+
+            if (m_caseClassPrefix.isEmpty()) {
+                m_caseClassPrefix = m_caseClassDataLastField.substring(0, m_caseClassDataLastField.indexOf("_") + 1);
+            }
+
+            if (m_paramListLastField.startsWith(m_caseClassPrefix)) {
+              m_paramListLastField = m_paramListLastField.substring(m_caseClassPrefix.length());
+            }
+
+            m_paramListLastField = toCamel(m_paramListLastField);
+
+            m_createUpdateParamList += "                       xxxz." + m_paramListLastField + ",\n";
+            
+        } else if (strLine.contains("setValue") && ! m_discardProperty) {
+            String expression = strLine.substring(strLine.indexOf("(") + 1, strLine.indexOf(")"));
+            if (expression.equals("m_active === true ? 1 : 0")) {
+                m_createUpdateParamList += "                       xxxz.active,\n";
+            }
+        }        
+    }
+    
+    private String getFormType(String dataType) {
+        if (dataType.equals("String"))
+            return "text";
+        else if (dataType.equals("Boolean"))
+            return "boolean";
+        else 
+            return "number";
+    }
+       
+    private String getControllerFile() {        
+        m_caseClassDataFields = chop(m_caseClassDataFields, 2);
+        
+        String className = m_javaClassName.substring(1);
+        String pluralClassName = cairoTreeListControllerGetIdentifierPluralName(className);
+        String lowerPluralClassName = pluralClassName.toLowerCase();
+        String capitalizedPluralClassName = capitalize(pluralClassName);
+        String lowerCaseClassName = cairoTreeListControllerGetIdentifierName(className);
+        String capitalizedClassName = capitalize(lowerCaseClassName);
+        
+        String pkColumnName = m_caseClassPrefix + "ID";
+        
+        m_formData = "      \"id\" -> optional(number),\n" + chop(m_formData, 2) + "\n";        
+        m_writeData = ("      \"id\" -> Json.toJson(xxxz.id),\n" + "      C." + pkColumnName + " -> Json.toJson(xxxz.id),\n" + chop(m_writeData, 2)).replaceAll("xxxz", lowerCaseClassName) + "\n";
+        m_createUpdateParamList = chop(m_createUpdateParamList, 2).replaceAll("xxxz", lowerCaseClassName);
+
+        return "package controllers.logged.modules.general\n\n"
+                + m_controllerImports
+                + "\n\n"
+                + m_controllerClassData.replace("CASE-CLASS-FIELDS", m_caseClassDataFields).replaceAll("Xxxz", capitalizedClassName)
+                + "\n\n"
+                + m_controllerObject
+                    .replaceAll("Xxxzs", capitalizedPluralClassName)
+                    .replaceAll("xxxzs", lowerPluralClassName)
+                    .replaceAll("Xxxz", capitalizedClassName)
+                    .replaceAll("xxxz", lowerCaseClassName)
+                    .replaceAll("XXXZs", pluralClassName.toUpperCase())
+                    .replaceAll("XXXZ", lowerCaseClassName.toUpperCase())
+                    .replaceAll("\\[FORM-DATA\\]", m_formData)
+                    .replaceAll("\\[WRITES-DATA\\]", m_writeData)
+                    .replaceAll("\\[UPDATE-PARAM-LIST\\]", m_createUpdateParamList)
+                    .replaceAll("\\[CREATE-PARAM-LIST\\]", m_createUpdateParamList)
+                ;    
+    }
+    
+    private String chop(String text, int characters) {
+        if (text.length() <= characters)
+            return "";
+        else 
+            return text.substring(0, text.length() - characters);
+    }
+    
+    private String toCamel(String text) {
+        String rtn = "";
+        boolean lastWasUnderscore = false;
+        for (int i = 0; i < text.length(); i++) {
+            String c = text.substring(i, i+1);
+            if (c.equals("_")) {
+                lastWasUnderscore = true;
+            }
+            else {
+                if (lastWasUnderscore) {
+                    rtn += c.toUpperCase();
+                    lastWasUnderscore = false;
+                }                
+                else {
+                    rtn += c.toLowerCase();
+                }
+            }
+        }
+        return rtn;
+    }
+    
+    /*
+     
+     * MODEL
+     
+     */    
+    
+    private static final String m_modelImports = 
+            "import java.sql.{Connection, CallableStatement, ResultSet, Types, SQLException}\n"
+          + "import anorm.SqlParser._\n"
+          + "import anorm._\n"
+          + "import services.DateUtil\n"
+          + "import services.db.DB\n"
+          + "import models.cairo.system.database.{DBHelper, Register, Field, FieldType, SaveResult}\n"
+          + "import play.api.Play.current\n"
+          + "import models.domain.CompanyUser\n"
+          + "import java.util.Date\n"
+          + "import play.api.Logger\n"
+          + "import play.api.libs.json._\n"
+          + "import scala.util.control.NonFatal\n";
+    
+    private String m_modelCaseClass = 
+            "case class Xxxz(\n              id: Int,\n"
+          + "CASE-CLASS-FIELDS-FULL,\n"
+          + "              createdAt: Date,\n"
+          + "              updatedAt: Date,\n"
+          + "              updatedBy: Int) {\n\n"
+          + "  def this(\n      id: Int,\nCASE-CLASS-FIELDS-NO-FK-NAMES) = {\n\n"
+          + "    this(\n      id,\nCASE-CLASS-ARGUMENTS-FULL,\n"
+          + "      DateUtil.currentTime,\n      DateUtil.currentTime,\n      DBHelper.NoId)\n"
+          + "  }\n\n"  
+          + "  def this(\nCASE-CLASS-FIELDS-NO-FK-NAMES) = {\n\n"
+          + "    this(\n      DBHelper.NoId,\nCASE-CLASS-ARGUMENTS-NO-FK)\n\n"
+          + "  }\n\n"
+          + "}";
+    
+    private String m_modelObject = 
+                "object Xxxz {\n\n"
+
+            + "  lazy val emptyXxxz = Xxxz(\nCASE-CLASS-EMPTY-ARGUMENTS)\n\n"
+
+            + "  def apply(\n      id: Int,\nCASE-CLASS-FIELDS-NO-FK-NAMES) = {\n\n"
+            + "    new Xxxz(\n      id,\nCASE-CLASS-ARGUMENTS-APPLY-FULL)\n"
+            + "  }\n\n"
+            + "  def apply(\nCASE-CLASS-FIELDS-NO-FK-NAMES) = {\n\n"
+            + "    new Xxxz(\nCASE-CLASS-ARGUMENTS-NO-FK)\n"
+            + "  }\n\n"
+
+            + "  private val xxxzParser: RowParser[Xxxz] = {\n"
+            + "      SqlParser.get[Int](C.PK_COLUMN) ~\n"
+            + "[PARSER-MAP]"
+            + "      SqlParser.get[Date](DBHelper.CREATED_AT) ~\n"
+            + "      SqlParser.get[Date](DBHelper.UPDATED_AT) ~\n"
+            + "      SqlParser.get[Int](DBHelper.UPDATED_BY) map {\n"
+            
+            /* [PARSER-MAP]:
+             
+            + "      SqlParser.get[String](C.PRO_NAME) ~\n"
+            + "      SqlParser.get[String](C.PRO_CODE) ~\n"
+            + "      SqlParser.get[String](C.PRO_DESCRIP) ~\n"
+            + "      SqlParser.get[Int](DBHelper.ACTIVE) ~\n"
+            + "      SqlParser.get[Int](C.PA_ID) ~\n"
+            + "      SqlParser.get[String](C.PA_NAME)
+             
+             */
+            
+            
+            + "      case\n              id ~\n[PARSER~COLUMNS] ~\n              createdAt ~\n              updatedAt ~\n              updatedBy =>\n"
+            
+            /* [PARSER~COLUMNS]:             
+             
+             name ~ code ~ descrip ~ active ~ paId ~ paName
+             
+             */            
+            
+            + "        Xxxz(\n              id,\n[PARSER-COLUMNS],\n              createdAt,\n              updatedAt,\n              updatedBy)\n"
+            
+            /* [PARSER-COLUMNS]:
+            
+             name, code, descrip, (if(active != 0) true else false), paId, paName
+            
+            */
+            
+            + "    }\n"
+            + "  }\n\n"
+
+            + "  def create(user: CompanyUser, xxxz: Xxxz): Xxxz = {\n"
+            + "    save(user, xxxz, true)\n"
+            + "  }\n\n"
+
+            + "  def update(user: CompanyUser, xxxz: Xxxz): Xxxz = {\n"
+            + "    save(user, xxxz, false)\n"
+            + "  }\n\n"
+
+            + "  private def save(user: CompanyUser, xxxz: Xxxz, isNew: Boolean): Xxxz = {\n"
+            + "    def getFields = {\n"
+            + "      List(\n"
+            + "[SAVE-FIELD-LIST]\n"
+            + "      )\n"
+            + "    }\n"
+            
+            /* [SAVE-FIELD-LIST]
+             
+            + "        Field(C.PRO_NAME, xxxz.name, FieldType.text),\n"
+            + "        Field(C.PRO_CODE, xxxz.code, FieldType.text),\n"
+            + "        Field(C.PRO_DESCRIP, xxxz.descrip, FieldType.text),\n"
+            + "        Field(DBHelper.ACTIVE, (if(xxxz.active) 1 else 0), FieldType.boolean),\n"
+            + "        Field(C.PA_ID, xxxz.paId, FieldType.id)\n"             
+             
+             */
+            
+            
+            + "    def throwException = {\n"
+            + "      throw new RuntimeException(s\"Error when saving ${C.XXXZ}\")\n"
+            + "    }\n\n"
+
+            + "    DBHelper.saveEx(\n"
+            + "      user,\n"
+            + "      Register(\n"
+            + "        C.XXXZ,\n"
+            + "        C.PK_COLUMN,\n"
+            + "        xxxz.id,\n"
+            + "        false,\n"
+            + "        true,\n"
+            + "        true,\n"
+            + "        getFields),\n"
+            + "      isNew,\n"
+            + "      C.CODE_COLUMN\n"
+            + "    ) match {\n"
+            + "      case SaveResult(true, id) => load(user, id).getOrElse(throwException)\n"
+            + "      case SaveResult(false, id) => throwException\n"
+            + "    }\n"
+            + "  }\n\n"
+
+            + "  def load(user: CompanyUser, id: Int): Option[Xxxz] = {\n"
+            + "    loadWhere(user, s\"${C.PK_COLUMN} = {id}\", 'id -> id)\n"
+            + "  }\n\n"
+
+            + "  def loadWhere(user: CompanyUser, where: String, args : scala.Tuple2[scala.Any, anorm.ParameterValue[_]]*) = {\n"
+            + "    DB.withConnection(user.database.database) { implicit connection =>\n"
+            + "      SQL(s\"SELECT t1.*, t2.${C.FK_NAME} FROM ${C.XXXZ} t1 INNER JOIN ${C.???} t2 ON t1.${C.FK_ID} = t2.${C.FK_ID} WHERE $where\")\n"
+            + "        .on(args: _*)\n"
+            + "        .as(xxxzParser.singleOpt)\n"
+            + "    }\n"
+            + "  }\n\n"
+
+            + "  def delete(user: CompanyUser, id: Int) = {\n"
+            + "    DB.withConnection(user.database.database) { implicit connection =>\n"
+            + "      try {\n"
+            + "        SQL(s\"DELETE FROM ${C.XXXZ} WHERE ${C.PK_COLUMN} = {id}\")\n"
+            + "        .on('id -> id)\n"
+            + "        .executeUpdate\n"
+            + "      } catch {\n"
+            + "        case NonFatal(e) => {\n"
+            + "          Logger.error(s\"can't delete a ${C.XXXZ}. ${C.PK_COLUMN} id: $id. Error ${e.toString}\")\n"
+            + "          throw e\n"
+            + "        }\n"
+            + "      }\n"
+            + "    }\n"
+            + "  }\n\n"
+
+            + "  def get(user: CompanyUser, id: Int): Xxxz = {\n"
+            + "    load(user, id) match {\n"
+            + "      case Some(p) => p\n"
+            + "      case None => emptyXxxz\n"
+            + "    }\n"
+            + "  }\n"
+            + "}\n";           
