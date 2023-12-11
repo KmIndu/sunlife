@@ -1,3 +1,9 @@
+Dim brfFolder           As New cbrfBrowseFolder
+Dim strFolderName       As String
+
+var brfFolder = null; cbrfBrowseFolder
+var strFolderName = null;
+
 private String translateDim(String strLine) {
     // form is
     // dim variable_name as data_type
