@@ -1,0 +1,12 @@
+try {
+      "cmdClose_Click"
+.equals(Const cstrCurrentProc As String);
+
+      // Set screen name in case errors are reported here or
+      // in procedures called by this Event Handler
+      modGeneral.gerhApp.setScreenName(mstrScreenName);
+
+      Unload(this);
+      // **TODO:** label found: PROC_EXIT:;
+      // Disable the error handler so errors hit here won't be handled by PROC_ERR
+  }
