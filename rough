@@ -1,3 +1,71 @@
+public class MyClass {
+
+    private String translateDim(String strLine) {
+        // form is
+        // dim variable_name as data_type
+        strLine = strLine.trim();
+        String[] words = G.splitSpace(strLine); // strLine.split("\\s+");
+
+        // Extract variable name and data type
+        String vbIdentifier = words[1];
+        String identifier = getVariableName(vbIdentifier);
+        String dataType = "";
+        if (words.length > 3) {
+            dataType = words[3];
+        }
+
+        // Handle missing data type
+        if (dataType.isEmpty()) {
+            dataType = getObjectTypeName();
+        }
+        dataType = getDataType(dataType);
+
+        // Create and store variable information
+        Variable var = new Variable();
+        var.setJavaName(identifier);
+        var.setVbName(vbIdentifier);
+        var.setType(dataType);
+        m_functionVariables.add(var);
+
+        // Construct declaration string based on variable type
+        String declaration;
+        if (identifier.contains("(")) {
+            // Array
+            words = G.split(identifier);
+            int arrayDimension = words.length > 3 ? Integer.parseInt(words[2]) : 1;
+            dataType += "[" + arrayDimension + "]";
+            declaration = dataType + " " + identifier + " = new " + dataType.substring(0, dataType.length() - 2) + "[";
+            for (int i = 0; i < arrayDimension; i++) {
+                declaration += "0";
+                if (i < arrayDimension - 1) {
+                    declaration += ", ";
+                }
+            }
+            declaration += "];" + newline;
+        } else {
+            // Non-array
+            if (dataType.equals("cbrfBrowseFolder")) {
+                String className = resolveClassName(dataType); // Replace this with your actual logic to resolve the class name for "cbrfBrowseFolder"
+                declaration = className + " " + identifier + " = new " + className + "();" + misc + newline;
+            } else {
+                declaration = dataType + " " + identifier + " = " + getZeroValueForDataType(dataType) + ";" + misc + newline;
+            }
+        }
+
+        return declaration;
+    }
+
+    // ... other functions and code ...
+}
+
+
+
+
+
+
+
+
+
 private String translateDim(String strLine) {
     // form is
     // dim variable_name as data_type
