@@ -1,3 +1,31 @@
+private String translateConstDeclaration(String strLine) {
+    // VB6: Const cstrCurrentProc As String = "cmdClose_Click"
+    // Java: final String cstrCurrentProc = "cmdClose_Click";
+    
+    strLine = strLine.trim();
+    String[] words = G.splitSpace(strLine);
+    
+    if (words.length < 5 || !words[0].equalsIgnoreCase("Const")) {
+        return "*" + strLine + newline;  // Not a valid Const declaration
+    }
+
+    String identifier = words[1];
+    String dataType = words[3];
+    String constValue = words[5];
+
+    if (dataType.isEmpty()) {
+        // Determine data type if not explicitly specified
+        // (You can use your existing logic for this)
+    }
+
+    String javaDeclaration = "final " + dataType + " " + identifier + " = " + constValue + ";";
+
+    return javaDeclaration + newline;
+}
+
+
+
+
 private String translateCodeAux(String strLine, boolean inDeclaration) {
 
         // get out spaces even tabs
