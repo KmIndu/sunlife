@@ -10,3 +10,19 @@ try {
       // **TODO:** label found: PROC_EXIT:;
       // Disable the error handler so errors hit here won't be handled by PROC_ERR
   }
+
+
+Private Sub cmdClose_Click()
+    ' Comments  : Returns user to previous screen upon exiting
+    ' Parameters: None
+    ' Modified  :
+    ' --------------------------------------------------
+    On Error GoTo PROC_ERR
+    Const cstrCurrentProc As String = "cmdClose_Click"
+
+    ' Set screen name in case errors are reported here or
+    ' in procedures called by this Event Handler
+    gerhApp.ScreenName = mstrScreenName
+
+    Unload Me
+PROC_EXIT:
