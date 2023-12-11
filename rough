@@ -1,4 +1,36 @@
- private String translateConstDeclaration(String strLine) {
+private String translateConstDeclaration(String strLine) {
+    // VB6: Const cstrCurrentProc As String = "cmdClose_Click"
+    // Java: final String cstrCurrentProc = "cmdClose_Click";
+
+    strLine = strLine.trim();
+    String[] words = G.splitSpace(strLine);
+
+    if (words.length < 6 || !words[0].equalsIgnoreCase("const") || !words[4].equalsIgnoreCase("as")) {
+        return "*" + strLine + newline;  // Not a valid Const declaration
+    }
+
+    String identifier = words[1];
+    String dataType = words[3];
+    String constValue = words[5];
+
+    if (dataType.isEmpty()) {
+        // Determine data type if not explicitly specified
+        // (You can use your existing logic for this)
+    }
+
+    String javaDeclaration = "final " + dataType + " " + identifier + " = " + constValue + ";";
+
+    // Save the variable
+    saveVariable(identifier, identifier.toUpperCase(), dataType);
+
+    return javaDeclaration + newline;
+}
+
+
+
+
+
+private String translateConstDeclaration(String strLine) {
         // VB6: Const cstrCurrentProc As String = "cmdClose_Click"
         // Java: final String cstrCurrentProc = "cmdClose_Click";
 
