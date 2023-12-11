@@ -1,3 +1,15 @@
+private String resolveClassName(String dataType) {
+    if (dataType.equals("cbrfBrowseFolder")) {
+        return "cbrfBrowseFolder"; // Replace "cbrfBrowseFolder" with the actual class name
+    }
+    // ... add other mappings for different data types ...
+    else {
+        return dataType; // Use the data type string as the class name if no mapping exists
+    }
+}
+
+
+
 public class MyClass {
 
     private String translateDim(String strLine) {
