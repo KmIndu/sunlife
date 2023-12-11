@@ -1,3 +1,29 @@
+private String translateDim(String strLine) {
+    // Form is: Dim variable_name As New data_type
+    strLine = strLine.trim();
+    String[] words = G.splitSpace(strLine);
+
+    if (words.length < 5 || !words[3].equalsIgnoreCase("New")) {
+        return "*" + strLine + newline;  // Not a valid Dim declaration
+    }
+
+    String vbIdentifier = words[1];
+    String identifier = getVariableName(vbIdentifier);
+    String dataType = words[4];
+
+    Variable var = new Variable();
+    var.setJavaName(identifier);
+    var.setVbName(vbIdentifier);
+    var.setType(dataType);
+    m_functionVariables.add(var);
+
+    return dataType + " " + identifier + " = new " + dataType + "();" + newline;
+}
+
+
+
+
+
 Private Sub cmdBrowse_Click()
     ' Browse for Drive/Folder
     On Error GoTo PROC_ERR
