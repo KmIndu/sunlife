@@ -4,7 +4,7 @@ Dim strFolderName       As String
 var brfFolder = null; cbrfBrowseFolder
 var strFolderName = null;
 
- private String translateDim(String strLine) {
+  private String translateDim(String strLine) {
         // form is
         // dim variable_name as data_type
         strLine = strLine.trim();
@@ -56,35 +56,5 @@ var strFolderName = null;
             dataType = m_translateToCairo ? "var" : dataType;
             return dataType + " " + identifier + " = "
                     + getZeroValueForDataType(dataType) + ";" + misc + newline;
-        }
-    }
-private String getCairoVariableName(String name) {
-        if (m_translateToCairo || m_parseToCairo) {
-            if (name.trim().equals("K_NOMBRE"))
-                return "K_NAME";
-            if (name.trim().equals("K_CODIGO"))
-                return "K_CODE";
-            if (name.trim().equals("K_ACTIVO"))
-                return "K_ACTIVE";
-            if (name.trim().equals("m_nombre"))
-                return "m_name";
-            if (name.trim().equals("m_codigo"))
-                return "m_code";
-            if (name.trim().equals("m_activo"))
-                return "m_active";
-            if (name.trim().equals("m_objTree"))
-                return "m_listController";
-            if (name.trim().toLowerCase().startsWith("csc")) {
-                name = replaceIdentifierCamel(name);
-                if (G.endLike(name.toUpperCase(), "NOMBRE"))
-                    name = name.toUpperCase().replace("NOMBRE", "NAME");
-                else if (G.endLike(name.toUpperCase(), "CODIGO"))
-                    name = name.toUpperCase().replace("CODIGO", "CODE");
-                return name;
-            }
-            return name;
-        }
-        else {
-            return name;
         }
     }
