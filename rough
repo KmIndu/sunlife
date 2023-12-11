@@ -3,6 +3,57 @@ private String translateDim(String strLine) {
     // dim variable_name as data_type
     strLine = strLine.trim();
     String[] words = G.splitSpace(strLine);
+    String dataType = "";
+    String vbIdentifier = "";
+    String identifier = "";
+    String misc = "";
+
+    if (words.length > 1) {
+        vbIdentifier = words[1];
+        identifier = getVariableName(words[1]);
+        if (words.length > 3) {
+            dataType = words[3];
+        }
+        for (int i = 4; i < words.length; i++) {
+            misc += " " + words[i];
+        }
+    }
+
+    if (dataType.isEmpty()) {
+        dataType = getObjectTypeName();
+    }
+
+    dataType = getDataType(dataType);
+
+    if (m_translateToCairo) {
+        identifier = translateVarNameToCairo(identifier);
+    }
+
+    identifier = getCairoVariableName(identifier);
+
+    Variable var = new Variable();
+    var.setJavaName(identifier);
+    var.setVbName(vbIdentifier);
+    var.setType(dataType);
+    m_functionVariables.add(var);
+
+    // Check if it's an object instantiation
+    if (misc.contains("New")) {
+        // Java code for object instantiation
+        return dataType + " " + identifier + " = new " + dataType + "();" + misc + newline;
+    } else {
+        // Regular variable declaration
+        return dataType + " " + identifier + " = " + getZeroValueForDataType(dataType) + ";" + misc + newline;
+    }
+}
+
+
+
+private String translateDim(String strLine) {
+    // form is
+    // dim variable_name as data_type
+    strLine = strLine.trim();
+    String[] words = G.splitSpace(strLine);
 
     if (words.length < 2) {
         return "*" + strLine + newline;  // Not a valid Dim declaration
