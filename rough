@@ -1,4 +1,59 @@
 private String translateDim(String strLine) {
+    // form is
+    // dim variable_name as data_type
+    strLine = strLine.trim();
+    String[] words = G.splitSpace(strLine);
+
+    if (words.length < 2) {
+        return "*" + strLine + newline;  // Not a valid Dim declaration
+    }
+
+    String vbIdentifier = words[1];
+    String identifier = getVariableName(words[1]);
+    String dataType = "";
+
+    if (words.length > 3) {
+        dataType = words[3];
+    }
+
+    String misc = "";
+    for (int i = 4; i < words.length; i++) {
+        misc += " " + words[i];
+    }
+
+    if (dataType.isEmpty()) {
+        dataType = getObjectTypeName();
+    }
+    dataType = getDataType(dataType);
+
+    Variable var = new Variable();
+    var.setJavaName(identifier);
+    var.setVbName(vbIdentifier);
+    var.setType(dataType);
+    m_functionVariables.add(var);
+
+    if (!misc.isEmpty() && misc.contains("New")) {
+        return dataType + " " + identifier + " = new " + dataType + "();" + misc + newline;
+    } else if (identifier.contains("(")) {
+        words = G.split(identifier);
+        if (words.length > 3) {
+            dataType += "[" + words[2] + "]";
+        } else {
+            dataType += "[]";
+        }
+        dataType = m_translateToCairo ? "var" : dataType;
+        return dataType + " " + identifier + " = null;" + misc + newline;
+    } else {
+        dataType = m_translateToCairo ? "var" : dataType;
+        return dataType + " " + identifier + " = "
+                + getZeroValueForDataType(dataType) + ";" + misc + newline;
+    }
+}
+
+
+
+
+private String translateDim(String strLine) {
     // Form is: Dim variable_name As New data_type
     strLine = strLine.trim();
     String[] words = G.splitSpace(strLine);
