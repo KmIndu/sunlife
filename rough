@@ -1,203 +1,307 @@
-Const cstrCurrentProc   As String = "cmdBrowse_Click"
+  private String translateConstDeclaration(String strLine) {
+        // VB6: Const cstrCurrentProc As String = "cmdClose_Click"
+        // Java: final String cstrCurrentProc = "cmdClose_Click";
 
+        strLine = strLine.trim();
+        String[] words = G.splitSpace(strLine);
 
-private String translateConstDeclaration(String strLine) {
-    // VB6: Const cstrCurrentProc As String = "cmdClose_Click"
-    // Java: final String cstrCurrentProc = "cmdClose_Click";
+        if (words.length < 6 || !words[0].equalsIgnoreCase("const") || !words[2].equalsIgnoreCase("as")) {
+            return "*" + strLine + newline;  // Not a valid Const declaration
+        }
 
-    strLine = strLine.trim();
-    String[] words = G.splitSpace(strLine);
+        String identifier = words[1];
+        String dataType = words[3];
+        String constValue = words[5];
 
-    if (words.length < 6 || !words[0].equalsIgnoreCase("Const") || !words[2].equalsIgnoreCase("As")) {
-        return "*" + strLine + newline;  // Not a valid Const declaration
+        if (dataType.isEmpty()) {
+            // logic to determine data type based on constValue
+        }
+
+        String javaDeclaration = "final " + dataType + " " + identifier + " = " + constValue + ";";
+
+        return javaDeclaration + newline;
     }
 
-    String identifier = words[1];
-    String dataType = words[3];
-    String constValue = words[5];
-
-    if (dataType.isEmpty()) {
-        // Use your logic to determine data type based on constValue
-    }
-
-    String javaDeclaration = "final " + dataType + " " + identifier + " = " + constValue + ";";
-
-    return javaDeclaration + newline;
-}
 
 
+    private String translatePrivateConstMember(String strLine) {
+        // form is
+            // private const identifier as data_type = value
+            // private const identifier = value
+        strLine = strLine.trim();
 
+        int startComment = getStartComment(strLine);
+        String workLine = strLine;
+        String comments = "";
+        if (startComment >= 0) {
+            comments =  "//" + workLine.substring(startComment);
+            workLine = workLine.substring(0, startComment-1);
+        }
 
+        String[] words = G.splitSpace(workLine);//workLine.split("\\s+");
+        String dataType = "";
+        String identifier = "";
+        String constValue = "";
 
-
-private String translateConstDeclaration(String strLine) {
-    // VB6: Const cstrCurrentProc As String = "cmdClose_Click"
-    // Java: final String cstrCurrentProc = "cmdClose_Click";
-    
-    strLine = strLine.trim();
-    String[] words = G.splitSpace(strLine);
-    
-    if (words.length < 5 || !words[0].equalsIgnoreCase("Const")) {
-        return "*" + strLine + newline;  // Not a valid Const declaration
-    }
-
-    String identifier = words[1];
-    String dataType = words.length >= 4 ? words[3] : "";
-    String constValue = words.length >= 6 ? words[5] : "";
-
-    if (dataType.isEmpty()) {
-        // Determine data type if not explicitly specified
-        if (constValue.startsWith("\"")) {
-            dataType = "String";
-        } else if (constValue.startsWith("#")) {
-            dataType = "Date";
-        } else if (Character.isDigit(constValue.charAt(0)) || constValue.startsWith("&h")) {
-            dataType = "int";
-            if (constValue.startsWith("&h")) {
-                constValue = "0x" + constValue.substring(2);
-            }
-        } else {
-            // Add your custom logic to determine the data type if needed
-            // For now, it's assumed the data type is specified in the Const declaration
+        // private const identifier as data_type = value
+        //
+        if (words.length > 5) {
+            identifier = words[2];
+            dataType = words[4];
+            constValue = words[6];
+        }
+        // private const identifier = value
+        //
+        else if (words.length == 5) {
+            identifier = words[2];
+            constValue = words[4];
+        }
+        else {
             return "*" + strLine + newline;
         }
-    }
-
-    String javaDeclaration = "final " + dataType + " " + identifier + " = " + constValue + ";";
-
-    return javaDeclaration + newline;
-}
-
-
-
-
-private String translateCodeAux(String strLine, boolean inDeclaration) {
-
-        // get out spaces even tabs
-        //
-        String workLine = G.ltrimTab(strLine).toLowerCase();
-
-        //check for Const declaration
-        if(inDeclaration && workLine.contains(" const "))
-        {
-            return translateConstDeclaration(strLine);
-        }
-
-        // dim
-        if (workLine.length() > 4) {
-            if (workLine.substring(0,4).equals("dim ")) {
-                return translateDim(strLine);
+        if (dataType.isEmpty()) {
+            if (constValue.charAt(0) == '"') {
+                dataType = "String";
             }
-        }
-        // in declaration
-            // private and public can be modifiers of member variables
-            // or events
-            //
-        if (inDeclaration) {
-            if (workLine.length() > 8) {
-                if (workLine.substring(0,8).equals("private ")) {
-                    if (workLine.contains(" const ")) {
-                        return translatePrivateConstMember(strLine);                        
-                    }
-                    else {
-                        return translatePrivateMember(strLine);
-                    }
-                }
+            else if (constValue.charAt(0) == '#'){
+                dataType = "Date";
             }
-            if (workLine.length() > 7) {
-                if (workLine.substring(0,7).equals("public ")) {
-                    if (workLine.contains(" const ")) {
-                        return translatePublicConstMember(strLine);
-                    }
-                    else if (workLine.contains(" event ")) {
-                        return translateEventDeclaration(strLine);
-                    }
-                    else {
-                        return translatePublicMember(strLine);
-                    }
-                }
+            else if (C_NUMBERS.contains(String.valueOf(constValue.charAt(0)))){
+                dataType = "int";
             }
-        }
-        // in function
-            // private and public only can be modifier of functions
-            //
-        else {
-            // a function declaration is like this
-                // Public Function ShowPrintDialog(ByVal
-            if (isFunctionDeclaration(workLine)) {
-                strLine = translateFunctionDeclaration(strLine);
-                checkEventHandler(strLine);
-                strLine = translateFunctionReturnVariable(strLine);
-                return strLine;
+            else if (constValue.substring(0,2).equalsIgnoreCase("&h")) {
+                dataType = "int";
+                constValue = "0x" + constValue.substring(2);
             }
             else {
-                if (isEndFunction(workLine)) {
-                    String onErrorLabelNotFound = checkOnErrorLabelFound();
-                    String endOfPreviousOnError = getEndOfPreviousOnError();
-                    String javaScript = m_translateToCairo ? ";" : "";
-                    strLine = onErrorLabelNotFound
-                                + endOfPreviousOnError
-                                + getReturnLine()
-                                + "}" + javaScript + newline;
-                    m_function = null;
-                    m_inFunction = false;
-                    return strLine;
-                }
-                // function's body
-                //
-                else {
-                    // types of sentences
-                        // conditional block
-                            // if, select case, elseif, else
-                    if (isIfSentence(workLine))
-                        return translateIfSentence(strLine);
-                    if (isElseIfSentence(workLine))
-                        return translateElseIfSentence(strLine);
-                    else if (isElseSentence(workLine))
-                        return translateElseSentence(strLine);
-                    else if (isEndIfSentence(workLine))
-                        return translateEndIfSentence(strLine);
-                    else if (isSelectCaseSentence(workLine))
-                        return translateSelectCaseSentence(strLine);
-                    else if (isCaseSentence(workLine))
-                        return translateCaseSentence(strLine);
-                    else if (isEndSelectSentence(workLine))
-                        return translateEndSelectSentence(strLine);
-                    else if (isExitFunctionSentence(workLine))
-                        return translateExitFunctionSentence(strLine);
-                    else if (isDoWhileSentence(workLine))
-                        return translateDoWhileSentence(strLine);
-                    else if (isDoSentence(workLine))
-                        return translateDoSentence(strLine);
-                    else if (isWhileSentence(workLine))
-                        return translateWhileSentence(strLine);
-                    else if (isLoopUntilSentence(workLine))
-                        return translateLoopUntilWhileSentence(strLine, true);
-                    else if (isLoopWhileSentence(workLine))
-                        return translateLoopUntilWhileSentence(strLine, false);
-                    else if (isWendSentence(workLine))
-                        return translateWendSentence(strLine);
-                    else if (isLoopSentence(workLine))
-                        return translateLoopSentence(strLine);
-                    else if (isForSentence(workLine))
-                        return translateForSentence(strLine);
-                    else if (isNextSentence(workLine))
-                        return translateNextSentence(strLine);
-                    else if (isOnErrorSentence(workLine))
-                        return translateOnErrorSentence(strLine);
-                    else if (isOnErrorLabelSentence(workLine))
-                        return translateOnErrorLabelSentence(strLine);
+                IdentifierInfo info = null;
+                info = getIdentifierInfo(constValue, "", false);
+                if (info != null) {
+                    if (info.isFunction)
+                        dataType = info.function.getReturnType().dataType;
                     else
-                        return translateSentenceWithNewLine(strLine);
-                        // loop block
-                            // for, while, do, loop
-
-                        // asignment sentence
-                            // set, =
-
-                        // call sentence
+                        dataType = info.variable.dataType;
+                }
+                else {
+                    return "*TODO:** (the data type can't be found for the value ["
+                            + constValue + "])" + strLine + newline;
                 }
             }
         }
-        return "*" + strLine + newline;
+
+        String vbIdentifier = identifier;        
+        identifier = getCairoVariableName(identifier);
+        identifier = identifier.toUpperCase();
+
+        Variable var = new Variable();
+        var.setVbName(vbIdentifier);
+        var.setJavaConstantName(identifier);
+        var.setType(dataType);
+        m_memberVariables.add(var);
+
+        saveVariable(vbIdentifier, identifier, dataType);
+
+        if (m_translateToJava) {
+        
+            return "private static final "
+                    + dataType + " "
+                    + identifier + " = "
+                    + constValue + ";"
+                    + comments + newline;
+        }
+        else {
+            
+            if (m_translateToCairo) {
+                return "var "
+                        + identifier + " = "
+                        + constValue + ";"
+                        + comments + newline;                
+            }
+            else {
+                return "private const "
+                        + dataType + " "
+                        + identifier + " = "
+                        + constValue + ";"
+                        + comments + newline;
+            }
+        }
+    }
+
+    private void saveFunction(String vbIdentifier, String identifier, String dataType) {
+        m_functionObject.setClId(m_classObject.getId());
+        m_functionObject.setVbName(vbIdentifier);
+        m_functionObject.setJavaName(identifier);
+        m_functionObject.setDataType(dataType);
+        m_functionObject.getFunctionIdFromFunctionName();
+        m_functionObject.saveFunction();
+    }
+
+    private void saveParam(String vbParamName, String paramName, String dataType) {
+        saveVariable(vbParamName, paramName, dataType, true, false);
+    }
+    
+    private void saveVariable(String vbIdentifier, String identifier, String dataType) {
+        saveVariable(vbIdentifier, identifier, dataType, false, false);
+    }
+
+    private void saveVariable(String vbIdentifier,
+                                String identifier,
+                                String dataType,
+                                boolean isParameter,
+                                boolean isPublic) {
+
+        m_variableObject.setClId(m_classObject.getId());
+        m_variableObject.setVbName(vbIdentifier);
+        m_variableObject.setJavaName(identifier);
+        m_variableObject.setFunId(m_functionObject.getId());
+        m_variableObject.setDataType(dataType);
+        m_variableObject.setIsParameter(isParameter);
+        m_variableObject.setIsPublic(isPublic);
+        m_variableObject.getVariableIdFromVariableName();
+        m_variableObject.saveVariable();
+    }
+
+    private void saveVariableInType(String vbIdentifier, String identifier, String dataType) {
+        m_variableObject.setClId(m_typeClassObject.getId());
+        m_variableObject.setVbName(vbIdentifier);
+        m_variableObject.setJavaName(identifier);
+        m_variableObject.setFunId(Db.CS_NO_ID);
+        m_variableObject.setDataType(dataType);
+        m_variableObject.setIsParameter(false);
+        m_variableObject.setIsPublic(true);
+        m_variableObject.getVariableIdFromVariableName();
+        m_variableObject.saveVariable();
+    }
+
+    private void saveVariableInEnum(String vbIdentifier, String identifier, String dataType) {
+        m_variableObject.setClId(m_enumClassObject.getId());
+        m_variableObject.setVbName(vbIdentifier);
+        m_variableObject.setJavaName(identifier);
+        m_variableObject.setFunId(Db.CS_NO_ID);
+        m_variableObject.setDataType(dataType);
+        m_variableObject.setIsParameter(false);
+        m_variableObject.setIsPublic(true);
+        m_variableObject.getVariableIdFromVariableName();
+        m_variableObject.saveVariable();
+    }
+
+    private String translatePublicConstMember(String strLine) {
+        // form is
+            // dim variable_name as data_type
+        strLine = strLine.trim();
+        String[] words = G.splitSpace(strLine);//strLine.split("\\s+");
+        String dataType = "";
+        String identifier = "";
+        String constValue = "";
+        String misc = "";
+        
+        
+        // debug
+        /*
+        if (identifier.equals("cscActivo")) {
+            int i = 9999;
+        }        
+         * 
+         * 
+         */
+        if (words.length > 2) {
+            identifier = words[2];
+            if (words.length >= 6) {
+                if (words[4].equals("=")) {
+                    dataType = words[3];
+                    constValue = words[5];                    
+                    for (int i = 6; i < words.length; i++) {
+                        misc += " " + words[i];
+                    }                
+                }
+                else {
+                    if (words.length >= 7) {
+                        if (words[5].equals("=")) {
+                            dataType = words[4];
+                            constValue = words[6];                    
+                            for (int i = 7; i < words.length; i++) {
+                                misc += " " + words[i];
+                            }
+                            
+                        }
+                    }
+                    else {
+                        for (int i = 5; i < words.length; i++) {
+                            misc += " " + words[i];
+                        }
+                    }
+                }
+            }
+            else {
+                return "*" + strLine + newline;
+            }
+        }
+        else {
+            return "*" + strLine + newline;
+        }
+        if (dataType.isEmpty()) {
+            if (constValue.charAt(0) == '"') {
+                dataType = "String";
+            }
+            else if (constValue.charAt(0) == '#'){
+                dataType = "Date";
+            }
+            else if (C_NUMBERS.contains(String.valueOf(constValue.charAt(0)))){
+                dataType = "int";
+            }
+            else if (constValue.substring(0,2).equalsIgnoreCase("&h")) {
+                dataType = "int";
+                constValue = "0x" + constValue.substring(2);
+            }
+            else {
+                IdentifierInfo info = null;
+                info = getIdentifierInfo(constValue, "", false);
+                if (info != null) {
+                    if (info.isFunction)
+                        dataType = info.function.getReturnType().dataType;
+                    else
+                        dataType = info.variable.dataType;
+                }
+                else {
+                    return "*TODO:** (the data type can't be found for the value ["
+                            + constValue + "])" + strLine + newline;
+                }
+            }
+        }
+
+        String vbIdentifier = identifier;
+        identifier = getCairoVariableName(identifier);
+        identifier = identifier.toUpperCase();        
+
+        Variable var = new Variable();
+        var.setVbName(vbIdentifier);
+        var.setJavaConstantName(identifier);
+        var.setType(dataType);
+        m_memberVariables.add(var);
+
+        saveVariable(vbIdentifier, identifier, dataType);
+
+        if (m_translateToJava) {
+
+            return "public static final " + dataType + " " + identifier + " = "
+                    + constValue + ";" + misc + newline;
+        }
+        else {
+
+            String rtn = "public const " + dataType + " " + identifier + " = "
+                    + constValue + ";" + misc + newline;
+            
+            if (m_translateToCairo) {
+                if (G.beginLike(rtn, "public const String CSC")) {
+                    rtn = identifier.substring(3) + ": "
+                        + constValue + "," + misc + newline;
+                }
+                else if (G.beginLike(rtn, "public const String CST")) {
+                    rtn = identifier.substring(3) + ": "
+                        + constValue + "," + misc + newline;
+                }
+            }        
+            
+            return rtn;
+        }
     }
