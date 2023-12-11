@@ -10,12 +10,25 @@ private String translateConstDeclaration(String strLine) {
     }
 
     String identifier = words[1];
-    String dataType = words[3];
-    String constValue = words[5];
+    String dataType = words.length >= 4 ? words[3] : "";
+    String constValue = words.length >= 6 ? words[5] : "";
 
     if (dataType.isEmpty()) {
         // Determine data type if not explicitly specified
-        // (You can use your existing logic for this)
+        if (constValue.startsWith("\"")) {
+            dataType = "String";
+        } else if (constValue.startsWith("#")) {
+            dataType = "Date";
+        } else if (Character.isDigit(constValue.charAt(0)) || constValue.startsWith("&h")) {
+            dataType = "int";
+            if (constValue.startsWith("&h")) {
+                constValue = "0x" + constValue.substring(2);
+            }
+        } else {
+            // Add your custom logic to determine the data type if needed
+            // For now, it's assumed the data type is specified in the Const declaration
+            return "*" + strLine + newline;
+        }
     }
 
     String javaDeclaration = "final " + dataType + " " + identifier + " = " + constValue + ";";
