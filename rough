@@ -1,3 +1,6 @@
+Const cstrCurrentProc   As String = "cmdBrowse_Click"
+
+
 private String translateConstDeclaration(String strLine) {
     // VB6: Const cstrCurrentProc As String = "cmdClose_Click"
     // Java: final String cstrCurrentProc = "cmdClose_Click";
