@@ -1,30 +1,21 @@
-    private String translateConstDeclaration(String strLine) {
-        // VB6: Const cstrCurrentProc As String = "cmdClose_Click"
-        //
-        // Java: final String cstrCurrentProc = "cmdClose_Click";
-        if(strLine.contains("Const") && strLine.contains("equals") && strLine.contains("As")){
-            String[] words = G.splitSpace(strLine);
-            String value = words[0].substring(0,words[0].indexOf("."));
-            String varName = words[1];
-
-            strLine = "final "+words[3].substring(0,words[3].indexOf(")"))+" "+varName+" = "+value+";";
-
-            return strLine;
-        }
-        return strLine;
-    }
-
-
-private String translateDim(String strLine) {
+private String translateDim2(String strLine) {
 //    Dim brfFolder           As New cbrfBrowseFolder
  //   Converted code -> New brfFolder = null; cbrfBrowseFolder
 //    Correct code -> cbrfBrowseFolder brfFolder = new cbrfBrowseFolder();
 
     if(strLine.contains("New")  && strLine.contains("null") && strLine.charAt(strLine.length()-1)!=';'){
         String[] words = G.splitSpace(strLine);
-        String varName = words[5];
 
-        strLine= varName+" "+words[1]+" = "+"new "+varName+"()"+";";
+        //idx 0- New
+        //idx 1- brfFolder
+        //idx 2- =
+        //idx 3- null;
+        //idx4- cbrfBrowseFolder
+
+        String className = words[4];
+        String varName = words[1].substring(0, words[1].indexOf("="));
+
+        strLine= className+" "+varName+" = "+"new "+className+"();";
 
         return strLine;
     }
