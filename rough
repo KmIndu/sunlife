@@ -17,14 +17,14 @@
 
 private String translateDim(String strLine) {
 //    Dim brfFolder           As New cbrfBrowseFolder
+ //   Converted code -> New brfFolder = null; cbrfBrowseFolder
 //    Correct code -> cbrfBrowseFolder brfFolder = new cbrfBrowseFolder();
-    if(strLine.contains("New")  && strLine.contains("As") && strLine.charAt(strLine.length()-1)!=';'){
-        String[] words = G.splitSpace(strLine);
-//        String value = words[0].substring(0,words[0].indexOf("."));
-        String varName = words[4];
 
-        strLine= varName+" "+words[0]+" = "+"new "+varName+"()"+";";
-        //strLine = "final "+words[3].substring(0,words[3].indexOf(")"))+" "+varName+" = "+value+";";
+    if(strLine.contains("New")  && strLine.contains("null") && strLine.charAt(strLine.length()-1)!=';'){
+        String[] words = G.splitSpace(strLine);
+        String varName = words[5];
+
+        strLine= varName+" "+words[1]+" = "+"new "+varName+"()"+";";
 
         return strLine;
     }
