@@ -1,23 +1,11 @@
-private String translateDim2(String strLine) {
-//    Dim brfFolder           As New cbrfBrowseFolder
- //   Converted code -> New brfFolder = null; cbrfBrowseFolder
-//    Correct code -> cbrfBrowseFolder brfFolder = new cbrfBrowseFolder();
+ The parameters are passed inappropriately while calling methods. 
 
-    if(strLine.contains("New")  && strLine.contains("null") && strLine.charAt(strLine.length()-1)!=';'){
-        String[] words = G.splitSpace(strLine);
+Eg.  
 
-        //idx 0- New
-        //idx 1- brfFolder
-        //idx 2- =
-        //idx 3- null;
-        //idx4- cbrfBrowseFolder
+prmReturnValue = w_aDOCommand.CreateParameter(Name:="@return_value", Type:=adInteger, Direction:=adParamReturnValue, chrgHourglass.getValue():=Null); 
 
-        String className = words[4];
-        String varName = words[1].substring(0, words[1].indexOf("="));
+ 
 
-        strLine= className+" "+varName+" = "+"new "+className+"();";
+8. The dataType is missing in many variables in the converted code. 
 
-        return strLine;
-    }
-    return strLine;
-}
+Eg. The code in 7th point example doesn't have a dataType of variable prmReturnValue 
