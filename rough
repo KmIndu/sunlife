@@ -1,4 +1,14 @@
- ADODB.Command w_aDOCommand = adwTemp.getADOCommand();
+.search-input {
+  margin-right: 10px;
+  border: 1px solid #ccc;
+  padding: 5px;
+}
+className="search-input"
+
+
+
+
+ADODB.Command w_aDOCommand = adwTemp.getADOCommand();
       // ---Parameter #1---
       // Define the return value that represents the error code (i.e. reason) why
       // the stored procedure failed.
