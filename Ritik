@@ -15,3 +15,61 @@
     <script src="script.js"></script>
 </body>
 </html>
+
+
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    background-color: #f4f4f4;
+}
+
+.container {
+    text-align: center;
+}
+
+button {
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+function checkIn() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(successCheckIn, errorCheckIn);
+    } else {
+        alert("Geolocation is not supported by this browser.");
+    }
+}
+
+function successCheckIn(position) {
+    // Check if the user is within a specific geographical range (latitude and longitude)
+    const latitude = position.coords.latitude;
+    const longitude = position.coords.longitude;
+
+    // Example location coordinates (adjust as needed)
+    const allowedLatitude = 37.7749;
+    const allowedLongitude = -122.4194;
+    const allowedRadius = 0.01; // In degrees
+
+    if (
+        Math.abs(latitude - allowedLatitude) < allowedRadius &&
+        Math.abs(longitude - allowedLongitude) < allowedRadius
+    ) {
+        alert("Checked in successfully!");
+    } else {
+        alert("You are not within the designated location for check-in.");
+    }
+}
+
+function errorCheckIn(error) {
+    alert(`Error: ${error.message}`);
+}
+
+
+
+
+
