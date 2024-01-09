@@ -1,3 +1,68 @@
+<script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-firestore.js"></script>
+
+const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_AUTH_DOMAIN",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_STORAGE_BUCKET",
+    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+    appId: "YOUR_APP_ID"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+
+function login() {
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+    const enteredCaptcha = document.getElementById('captcha').value;
+    const generatedCaptcha = document.getElementById('generated-captcha').textContent;
+
+    // Dummy validation (replace with actual validation)
+    if (username && password && enteredCaptcha === generatedCaptcha) {
+        firebase.auth().signInWithEmailAndPassword(username, password)
+            .then((userCredential) => {
+                // User successfully signed in
+                const userId = userCredential.user.uid;
+
+                // Check if the user's entry exists in Firestore
+                const usersCollection = firebase.firestore().collection('users');
+                usersCollection.doc(userId).get().then((doc) => {
+                    if (doc.exists) {
+                        // Entry exists; proceed to the attendance page
+                        document.getElementById('landing-container').style.display = 'none';
+                        document.getElementById('attendance-container').style.display = 'flex';
+                    } else {
+                        // Entry doesn't exist; handle accordingly
+                        alert('User entry not found.');
+                    }
+                }).catch((error) => {
+                    console.error('Error checking user entry:', error);
+                    alert('Error checking user entry. Please try again.');
+                });
+            })
+            .catch((error) => {
+                alert('Invalid credentials. Try again.');
+            });
+    } else {
+        alert('Invalid credentials or captcha. Try again.');
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
