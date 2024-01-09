@@ -1,76 +1,13 @@
-<script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-firestore.js"></script>
-
-const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_AUTH_DOMAIN",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_STORAGE_BUCKET",
-    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-    appId: "YOUR_APP_ID"
-};
-
-firebase.initializeApp(firebaseConfig);
-
-
-function login() {
-    const username = document.getElementById('username').value;
-    const password = document.getElementById('password').value;
-    const enteredCaptcha = document.getElementById('captcha').value;
-    const generatedCaptcha = document.getElementById('generated-captcha').textContent;
-
-    // Dummy validation (replace with actual validation)
-    if (username && password && enteredCaptcha === generatedCaptcha) {
-        firebase.auth().signInWithEmailAndPassword(username, password)
-            .then((userCredential) => {
-                // User successfully signed in
-                const userId = userCredential.user.uid;
-
-                // Check if the user's entry exists in Firestore
-                const usersCollection = firebase.firestore().collection('users');
-                usersCollection.doc(userId).get().then((doc) => {
-                    if (doc.exists) {
-                        // Entry exists; proceed to the attendance page
-                        document.getElementById('landing-container').style.display = 'none';
-                        document.getElementById('attendance-container').style.display = 'flex';
-                    } else {
-                        // Entry doesn't exist; handle accordingly
-                        alert('User entry not found.');
-                    }
-                }).catch((error) => {
-                    console.error('Error checking user entry:', error);
-                    alert('Error checking user entry. Please try again.');
-                });
-            })
-            .catch((error) => {
-                alert('Invalid credentials. Try again.');
-            });
-    } else {
-        alert('Invalid credentials or captcha. Try again.');
-    }
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GEHU Attendance System</title>
     <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
     <div class="landing-container">
         <div class="background-img"></div>
@@ -90,18 +27,40 @@ function login() {
             </form>
         </div>
     </div>
-    
+
     <div class="attendance-container" id="attendance-container" style="display: none;">
         <h2>Mark Attendance for Today</h2>
         <p id="date"></p>
         <button onclick="markAttendance()">Slide to Mark Attendance</button>
-        <div id="location-error" style="color: red; display: none;">Not in the campus. Attendance cannot be marked.</div>
+        <div id="location-error" style="color: red; display: none;">Not in the campus. Attendance cannot be marked.
+        </div>
         <button onclick="viewPreviousAttendances()">View Previous Attendances</button>
     </div>
 
+    <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-firestore.js"></script>
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyDaCsqJKXlYSEAt1ljIOYUbTyLhUkj2LKo",
+        authDomain: "automated-attendance-app-c9edf.firebaseapp.com",
+        projectId: "automated-attendance-app-c9edf",
+        storageBucket: "automated-attendance-app-c9edf.appspot.com",
+        messagingSenderId: "464762394107",
+        appId: "1:464762394107:web:9555b25186b2146a5c275e"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+
+
     <script src="script.js"></script>
 </body>
+
 </html>
+
+
+
+
 
 
 body, html {
@@ -219,9 +178,7 @@ function updateDate() {
     const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
     dateContainer.textContent = today.toLocaleDateString('en-US', options);
 }
-
 function login() {
-    // Implement login logic here (dummy logic for demo)
     const username = document.getElementById('username').value;
     const password = document.getElementById('password').value;
     const enteredCaptcha = document.getElementById('captcha').value;
@@ -229,8 +186,30 @@ function login() {
 
     // Dummy validation (replace with actual validation)
     if (username && password && enteredCaptcha === generatedCaptcha) {
-        document.getElementById('landing-container').style.display = 'none';
-        document.getElementById('attendance-container').style.display = 'flex';
+        firebase.auth().signInWithEmailAndPassword(username, password)
+            .then((userCredential) => {
+                // User successfully signed in
+                const userId = userCredential.user.uid;
+
+                // Check if the user's entry exists in Firestore
+                const usersCollection = firebase.firestore().collection('users');
+                usersCollection.doc(userId).get().then((doc) => {
+                    if (doc.exists) {
+                        // Entry exists; proceed to the attendance page
+                        document.getElementById('landing-container').style.display = 'none';
+                        document.getElementById('attendance-container').style.display = 'flex';
+                    } else {
+                        // Entry doesn't exist; handle accordingly
+                        alert('User entry not found.');
+                    }
+                }).catch((error) => {
+                    console.error('Error checking user entry:', error);
+                    alert('Error checking user entry. Please try again.');
+                });
+            })
+            .catch((error) => {
+                alert('Invalid credentials. Try again.');
+            });
     } else {
         alert('Invalid credentials or captcha. Try again.');
     }
@@ -250,17 +229,3 @@ function viewPreviousAttendances() {
     // Implement view previous attendances logic
     alert('View Previous Attendances functionality. Implement as needed.');
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
