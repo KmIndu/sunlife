@@ -3,6 +3,202 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GEHU Attendance System</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="landing-container">
+        <div class="background-img"></div>
+        <div class="overlay"></div>
+        <div class="login-container">
+            <h1>Graphic Era Hill University</h1>
+            <form id="login-form">
+                <input type="text" placeholder="Username" id="username" required>
+                <input type="password" placeholder="Password" id="password" required>
+                <div id="captcha-container">
+                    <label for="captcha">Enter the code:</label>
+                    <input type="text" id="captcha" required>
+                    <span id="generated-captcha"></span>
+                </div>
+                <button type="button" onclick="login()">Sign In</button>
+                <a href="#" onclick="forgotPassword()">Forgot Password?</a>
+            </form>
+        </div>
+    </div>
+    
+    <div class="attendance-container" id="attendance-container" style="display: none;">
+        <h2>Mark Attendance for Today</h2>
+        <p id="date"></p>
+        <button onclick="markAttendance()">Slide to Mark Attendance</button>
+        <div id="location-error" style="color: red; display: none;">Not in the campus. Attendance cannot be marked.</div>
+        <button onclick="viewPreviousAttendances()">View Previous Attendances</button>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
+
+
+body, html {
+    margin: 0;
+    padding: 0;
+}
+
+.landing-container {
+    position: relative;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.background-img {
+    background-image: url('dummy-background.jpg'); /* Replace with your image URL */
+    background-size: cover;
+    background-position: center;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+}
+
+.overlay {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.login-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    color: #fff;
+}
+
+form {
+    max-width: 300px;
+    margin: 0 auto;
+}
+
+input {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: none;
+    border-radius: 5px;
+}
+
+button {
+    width: 100%;
+    padding: 10px;
+    background-color: #4caf50;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #45a049;
+}
+
+#captcha-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+#generated-captcha {
+    font-size: 18px;
+    font-weight: bold;
+    background-color: #fff;
+    padding: 5px 10px;
+    border-radius: 5px;
+}
+
+.attendance-container {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#location-error {
+    margin-top: 10px;
+}
+
+#attendance-container button {
+    margin-top: 15px;
+}
+
+
+document.addEventListener('DOMContentLoaded', function() {
+    generateCaptcha();
+    updateDate();
+});
+
+function generateCaptcha() {
+    const captchaContainer = document.getElementById('generated-captcha');
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let captcha = '';
+    for (let i = 0; i < 6; i++) {
+        captcha += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
+    captchaContainer.textContent = captcha;
+}
+
+function updateDate() {
+    const dateContainer = document.getElementById('date');
+    const today = new Date();
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    dateContainer.textContent = today.toLocaleDateString('en-US', options);
+}
+
+function login() {
+    // Implement login logic here (dummy logic for demo)
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+    const enteredCaptcha = document.getElementById('captcha').value;
+    const generatedCaptcha = document.getElementById('generated-captcha').textContent;
+
+    // Dummy validation (replace with actual validation)
+    if (username && password && enteredCaptcha === generatedCaptcha) {
+        document.getElementById('landing-container').style.display = 'none';
+        document.getElementById('attendance-container').style.display = 'flex';
+    } else {
+        alert('Invalid credentials or captcha. Try again.');
+    }
+}
+
+function forgotPassword() {
+    alert('Forgot Password functionality. Implement as needed.');
+}
+
+function markAttendance() {
+    // Location-based attendance marking logic goes here
+    // For simplicity, assume the student is within the campus
+    alert('Attendance marked successfully!');
+}
+
+function viewPreviousAttendances() {
+    // Implement view previous attendances logic
+    alert('View Previous Attendances functionality. Implement as needed.');
+}
+
+
+
+
+
+
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Attendance System</title>
     <link rel="stylesheet" href="styles.css">
 </head>
