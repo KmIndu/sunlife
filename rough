@@ -1,26 +1,7 @@
-.search-input {
-  margin-right: 10px;
-  border: 1px solid #ccc;
-  padding: 5px;
-}
-className="search-input"
-
-
-
-
-ADODB.Command w_aDOCommand = adwTemp.getADOCommand();
-      // ---Parameter #1---
-      // Define the return value that represents the error code (i.e. reason) why
-      // the stored procedure failed.
-      prmReturnValue = w_aDOCommand.CreateParameter(Name:="@return_value", Type:=adInteger, Direction:=adParamReturnValue, chrgHourglass.getValue():=Null);
-      w_aDOCommand.Parameters.Append(prmReturnValue);
-
-      // ---Parameter #2---
-      // Define the PAYE_PMT_DT_FROM_DATE parameter
-      prmPayePmtDtFromDt = w_aDOCommand.CreateParameter(Name:="paye_pmt_dt_from_date", Type:=adDBDate, Direction:=adParamInput, chrgHourglass.getValue():=dteFromDt);
-      w_aDOCommand.Parameters.Append(prmPayePmtDtFromDt);
-
-      // ---Parameter #3---
-      // Define the PAYE_PMT_DT_TO_DATE parameter
-      prmPayePmtDtToDt = w_aDOCommand.CreateParameter(Name:="paye_pmt_dt_to_date", Type:=adDBDate, Direction:=adParamInput, chrgHourglass.getValue():=dteToDt);
-      w_aDOCommand.Parameters.Append(prmPayePmtDtToDt);
+switch (VBA.ex.Number) {
+        //Case statements for expected errors go here
+      case  Else:
+        // Save Err object data, if not already saved
+        modGeneral.gerhApp.saveErrObjectData(mstrScreenName+ modResConstants.gCSTRDOT+ cstrCurrentProc);
+        break;
+    }
