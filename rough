@@ -1,3 +1,15 @@
+public String skipVBAexNumber(String code) {
+    return code.replaceAll("switch\\s*\\(VBA\\.ex\\.Number\\)",
+                            "try {\n" +
+                            "// Original code that might throw exceptions\n" +
+                            "} catch (Exception e) {\n" +
+                            "// Handle unexpected errors\n" +
+                            "}");
+}
+
+
+
+
 switch (VBA.ex.Number) {
         //Case statements for expected errors go here
       case  Else:
