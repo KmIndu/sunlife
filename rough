@@ -1,37 +1,28 @@
- private void fnTaxFile_Open(EnumTaxFile intTaxFile) {
-    // Comments  : Determines if all data is valid, including
-    //             whether all required fields have been input.
-    //             This function is called by cmdOK_Click.
-    //             If a data error is found, it returns False
-    //             which directs the caller to stop processing.
-    //             It also generates warnings, by calling
-    //             WarningData(), but only if no errors were
-    //             found up to that point.
-    // Parameters: Enum representing tax file to open
-    // Returns   : N/A
-    // Modified  :
-    // --------------------------------------------------
+ private void cmdBrowse_Click() {
+    // Browse for Drive/Folder
     try {
-      final String cstrCurrentProc = "fnTaxFile_Open"
-;      Scripting.FileSystemObject fso = null;
+      final String cstrCurrentProc = "cmdBrowse_Click"
+;      cbrfBrowseFolder
+ brfFolder = new cbrfBrowseFolder
+();      String strFolderName = "";
 
-      fso = new Scripting.FileSystemObject();
+      // Set screen name in case errors are reported here or
+      // in procedures called by this Event Handler
+      modGeneral.gerhApp.setScreenName(mstrScreenName);
 
-      switch (intTaxFile) {
-        case  etf_NonPuertoRico:
-          m_strTaxFile_NonPR = modGeneral.fnBuildQualifiedFileName(modGeneral.gapsApp.getTaxFileFolder(), txtFileNameNonPR.Text);
-          m_tsTaxFile_NonPR = fso.CreateTextFile(m_strTaxFile_NonPR, true);
-          break;
-
-        case  etf_PuertoRico:
-          m_strTaxFile_PR = modGeneral.fnBuildQualifiedFileName(modGeneral.gapsApp.getTaxFileFolder(), txtFileNamePR.Text);
-          m_tsTaxFile_PR = fso.CreateTextFile(m_strTaxFile_PR, true);
-          break;
-
-        default:
-          modGeneral.gerhApp.saveAppSpecificErr(vbObjectError + modResConstants.gCRES_NERR_UNEXPECTED_VAL_SELECT_CASE, mstrScreenName+ modResConstants.gCSTRDOT+ cstrCurrentProc);
-          // **TODO:** goto found: GoTo PROC_EXIT;
-          break;
+      //' Owner of the BrowseFolder window
+      brfFolder.hWnd = Me.cbrfBrowseFolder.setHWnd();
+      //' Title
+      brfFolder.Title = "Select a Folder to which the tax files will be saved";
+      //' Initial folder
+      brfFolder.Folder = txtTaxFileFolder.Text;
+      //' Default flags
+      brfFolder.Flags = BIF_RETURNONLYFSDIRS;
+      //' Go get it
+      strFolderName = brfFolder.ShowBrowse();
+      if (!brfFolder.Cancelled) {
+        txtTaxFileFolder.Text = modGeneral.fnAddBackslash(strFolderName).toUpperCase();
+        Me.Refresh;
       }
       // **TODO:** label found: PROC_EXIT:;
       // Disable the error handler so errors hit here won't be handled by PROC_ERR
@@ -40,16 +31,18 @@
     try {
 
     // Clean-up statements go here
-    modGeneral.fnFreeObject(fso);
+    modGeneral.fnFreeObject(brfFolder);
 
+    // Report the error, since this is an event handler
     if (modGeneral.gerhApp.getErrNum() != modResConstants.gCLNGERR_NUM_DEFAULT) {
-      modGeneral.gerhApp.propagateError(mstrScreenName+ modResConstants.gCSTRDOT+ cstrCurrentProc);
+      modGeneral.gerhApp.reportFatalError(mstrScreenName);
     }
     return;
     // **TODO:** label found: PROC_ERR:;
     switch (VBA.ex.Number) {
         //Case statements for expected errors go here
       case  Else:
+        // Save Err object data, if not already saved
         modGeneral.gerhApp.saveErrObjectData(mstrScreenName+ modResConstants.gCSTRDOT+ cstrCurrentProc);
         break;
     }
