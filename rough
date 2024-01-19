@@ -1,4 +1,52 @@
- private void cmdBrowse_Click() {
+private void cmdBrowse_Click() {
+    // Browse for Drive/Folder
+    try {
+        final String cstrCurrentProc = "cmdBrowse_Click";
+        cbrfBrowseFolder brfFolder = new cbrfBrowseFolder();
+        String strFolderName = "";
+
+        // Set screen name in case errors are reported here or
+        // in procedures called by this Event Handler
+        modGeneral.gerhApp.setScreenName(mstrScreenName);
+
+        // Owner of the BrowseFolder window
+        brfFolder.hWnd = this.cbrfBrowseFolder.setHWnd(); // Assuming this is the correct instance reference
+
+        // Title
+        brfFolder.Title = "Select a Folder to which the tax files will be saved";
+
+        // Initial folder
+        brfFolder.Folder = txtTaxFileFolder.getText();
+
+        // Default flags
+        brfFolder.Flags = BIF_RETURNONLYFSDIRS;
+
+        // Go get it
+        strFolderName = brfFolder.ShowBrowse();
+
+        if (!brfFolder.Cancelled) {
+            txtTaxFileFolder.setText(modGeneral.fnAddBackslash(strFolderName).toUpperCase());
+            refresh(); // Assuming refresh() is a method in frmGenerateTaxFile
+        }
+    } catch (Exception ex) {
+        ex.printStackTrace();
+    } finally {
+        // Clean-up statements go here
+        modGeneral.fnFreeObject(brfFolder);
+
+        // Report the error, since this is an event handler
+        if (modGeneral.gerhApp.getErrNum() != modResConstants.gCLNGERR_NUM_DEFAULT) {
+            modGeneral.gerhApp.reportFatalError(mstrScreenName);
+        }
+    }
+}
+
+
+
+
+
+
+private void cmdBrowse_Click() {
     // Browse for Drive/Folder
     try {
       final String cstrCurrentProc = "cmdBrowse_Click"
