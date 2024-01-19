@@ -1,9 +1,59 @@
- final String cstrCurrentProc = "fnShowInsuredForm"
-;      frmInsured frm = null;
+ private void fnTaxFile_Open(EnumTaxFile intTaxFile) {
+    // Comments  : Determines if all data is valid, including
+    //             whether all required fields have been input.
+    //             This function is called by cmdOK_Click.
+    //             If a data error is found, it returns False
+    //             which directs the caller to stop processing.
+    //             It also generates warnings, by calling
+    //             WarningData(), but only if no errors were
+    //             found up to that point.
+    // Parameters: Enum representing tax file to open
+    // Returns   : N/A
+    // Modified  :
+    // --------------------------------------------------
+    try {
+      final String cstrCurrentProc = "fnTaxFile_Open"
+;      Scripting.FileSystemObject fso = null;
 
-      if (!(modGeneral.fnIsFormLoaded("frmInsured", frm))) {
-        frm = new frmInsured();
+      fso = new Scripting.FileSystemObject();
+
+      switch (intTaxFile) {
+        case  etf_NonPuertoRico:
+          m_strTaxFile_NonPR = modGeneral.fnBuildQualifiedFileName(modGeneral.gapsApp.getTaxFileFolder(), txtFileNameNonPR.Text);
+          m_tsTaxFile_NonPR = fso.CreateTextFile(m_strTaxFile_NonPR, true);
+          break;
+
+        case  etf_PuertoRico:
+          m_strTaxFile_PR = modGeneral.fnBuildQualifiedFileName(modGeneral.gapsApp.getTaxFileFolder(), txtFileNamePR.Text);
+          m_tsTaxFile_PR = fso.CreateTextFile(m_strTaxFile_PR, true);
+          break;
+
+        default:
+          modGeneral.gerhApp.saveAppSpecificErr(vbObjectError + modResConstants.gCRES_NERR_UNEXPECTED_VAL_SELECT_CASE, mstrScreenName+ modResConstants.gCSTRDOT+ cstrCurrentProc);
+          // **TODO:** goto found: GoTo PROC_EXIT;
+          break;
       }
+      // **TODO:** label found: PROC_EXIT:;
+      // Disable the error handler so errors hit here won't be handled by PROC_ERR
+  }
+  //*TODO:** the error label PROC_ERR: couldn't be found
+    try {
 
-      frm.Show;
-chk Show if its variable or method and code accordingly
+    // Clean-up statements go here
+    modGeneral.fnFreeObject(fso);
+
+    if (modGeneral.gerhApp.getErrNum() != modResConstants.gCLNGERR_NUM_DEFAULT) {
+      modGeneral.gerhApp.propagateError(mstrScreenName+ modResConstants.gCSTRDOT+ cstrCurrentProc);
+    }
+    return;
+    // **TODO:** label found: PROC_ERR:;
+    switch (VBA.ex.Number) {
+        //Case statements for expected errors go here
+      case  Else:
+        modGeneral.gerhApp.saveErrObjectData(mstrScreenName+ modResConstants.gCSTRDOT+ cstrCurrentProc);
+        break;
+    }
+    /**TODO:** resume found: Resume(PROC_EXIT)*/;
+//*TODO:** the error label 0: couldn't be found
+  }
+}
