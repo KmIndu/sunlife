@@ -1,64 +1,6 @@
-public String skipVBAexNumber(String code) {
-    return code.replaceAll("switch\\s*\\(VBA\\.ex\\.Number\\)",
-                            "try {\n" +
-                            "// Original code that might throw exceptions\n" +
-                            "} catch (Exception e) {\n" +
-                            "// Handle unexpected errors\n" +
-                            "}");
-}
-
-
-
-
-switch (VBA.ex.Number) {
-        //Case statements for expected errors go here
-      case  Else:
-        // Save Err object data, if not already saved
-        modGeneral.gerhApp.saveErrObjectData(mstrScreenName+ modResConstants.gCSTRDOT+ cstrCurrentProc);
-        break;
-    }
-
-
-Private Sub cmdClose_Click()
-    ' Comments  : Returns user to previous screen upon exiting
-    ' Parameters: None
-    ' Modified  :
-    ' --------------------------------------------------
-    On Error GoTo PROC_ERR
-    Const cstrCurrentProc As String = "cmdClose_Click"
-
-    ' Set screen name in case errors are reported here or
-    ' in procedures called by this Event Handler
-    gerhApp.ScreenName = mstrScreenName
-
-    Unload Me
-PROC_EXIT:
-    ' Disable the error handler so errors hit here won't be handled by PROC_ERR
-    On Error GoTo 0
-    ' Clean-up statements go here
-
-    ' Report the error, since this is an event handler
-    If gerhApp.ErrNum <> gclngERR_NUM_DEFAULT Then
-        gerhApp.ReportFatalError mstrScreenName
-    End If
-    Exit Sub
-PROC_ERR:
-    Select Case Err.Number
-        'Case statements for expected errors go here
-        Case Else
-            ' Save Err object data, if not already saved
-            gerhApp.SaveErrObjectData mstrScreenName & gcstrDOT & cstrCurrentProc
-    End Select
-    Resume PROC_EXIT
-End Sub
-
- private void cmdBrowse_Click() {
-    // Browse for Drive/Folder
-    try {
-      final String cstrCurrentProc = "cmdBrowse_Click"
-;      cbrfBrowseFolder
- brfFolder = new cbrfBrowseFolder
-();      String strFolderName = "";
+final String cstrCurrentProc = "cmdBrowse_Click";
+      cbrfBrowseFolder brfFolder = new cbrfBrowseFolder();
+      String strFolderName = "";
 
       // Set screen name in case errors are reported here or
       // in procedures called by this Event Handler
@@ -77,30 +19,3 @@ End Sub
       if (!brfFolder.Cancelled) {
         txtTaxFileFolder.Text = modGeneral.fnAddBackslash(strFolderName).toUpperCase();
         Me.Refresh;
-      }
-      // **TODO:** label found: PROC_EXIT:;
-      // Disable the error handler so errors hit here won't be handled by PROC_ERR
-  }
-  //*TODO:** the error label PROC_ERR: couldn't be found
-    try {
-
-    // Clean-up statements go here
-    modGeneral.fnFreeObject(brfFolder);
-
-    // Report the error, since this is an event handler
-    if (modGeneral.gerhApp.getErrNum() != modResConstants.gCLNGERR_NUM_DEFAULT) {
-      modGeneral.gerhApp.reportFatalError(mstrScreenName);
-    }
-    return;
-    // **TODO:** label found: PROC_ERR:;
-    switch (VBA.ex.Number) {
-        //Case statements for expected errors go here
-      case  Else:
-        // Save Err object data, if not already saved
-        modGeneral.gerhApp.saveErrObjectData(mstrScreenName+ modResConstants.gCSTRDOT+ cstrCurrentProc);
-        break;
-    }
-    /**TODO:** resume found: Resume(PROC_EXIT)*/;
-//*TODO:** the error label 0: couldn't be found
-  }
-}
