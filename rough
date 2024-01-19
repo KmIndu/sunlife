@@ -6,3 +6,4 @@
       }
 
       frm.Show;
+chk Show if its variable or method and code accordingly
