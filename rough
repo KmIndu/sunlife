@@ -1,3 +1,12 @@
+if (!(strURL.toUpperCase().indexOf("HTTP", 1) == 1)) {
+    strURL = "http://" + strURL;
+}
+This checks if the result of strURL.toUpperCase().indexOf("HTTP", 1) is equal to 1 using the == operator.
+
+
+
+
+
 if (!(strURL.toUpperCase().indexOf("HTTP", 1).equals(1))) {
         strURL = "http://"+ strURL;
       }
