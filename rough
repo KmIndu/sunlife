@@ -1,1 +1,8 @@
+ final String cstrCurrentProc = "fnShowInsuredForm"
+;      frmInsured frm = null;
 
+      if (!(modGeneral.fnIsFormLoaded("frmInsured", frm))) {
+        frm = new frmInsured();
+      }
+
+      frm.Show;
