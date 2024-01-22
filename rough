@@ -1,100 +1,22 @@
-private void cmdBrowse_Click() {
-    // Browse for Drive/Folder
-    try {
-        final String cstrCurrentProc = "cmdBrowse_Click";
-        cbrfBrowseFolder brfFolder = new cbrfBrowseFolder();
-        String strFolderName = "";
+try {
 
-        // Set screen name in case errors are reported here or
-        // in procedures called by this Event Handler
-        modGeneral.gerhApp.setScreenName(mstrScreenName);
+      final String cstrCurrentProc = "fnUpdateStatusBar"
+;      final String cstrLabelPanel1 = "User ID: "
+;      final String cstrLabelPanel2 = "Environment: "
+;      final String cstrLabelPanel3 = "# of Possible Errors in the DB: "
+;
+      Me.sbrStatusBar.Panels(1).Text = cstrLabelPanel1+ strUserID;
+      Me.sbrStatusBar.Panels(2).Text = cstrLabelPanel2+ strEnv;
 
-        // Owner of the BrowseFolder window
-        brfFolder.hWnd = this.cbrfBrowseFolder.setHWnd(); // Assuming this is the correct instance reference
-
-        // Title
-        brfFolder.Title = "Select a Folder to which the tax files will be saved";
-
-        // Initial folder
-        brfFolder.Folder = txtTaxFileFolder.getText();
-
-        // Default flags
-        brfFolder.Flags = BIF_RETURNONLYFSDIRS;
-
-        // Go get it
-        strFolderName = brfFolder.ShowBrowse();
-
-        if (!brfFolder.Cancelled) {
-            txtTaxFileFolder.setText(modGeneral.fnAddBackslash(strFolderName).toUpperCase());
-            refresh(); // Assuming refresh() is a method in frmGenerateTaxFile
-        }
-    } catch (Exception ex) {
-        ex.printStackTrace();
-    } finally {
-        // Clean-up statements go here
-        modGeneral.fnFreeObject(brfFolder);
-
-        // Report the error, since this is an event handler
-        if (modGeneral.gerhApp.getErrNum() != modResConstants.gCLNGERR_NUM_DEFAULT) {
-            modGeneral.gerhApp.reportFatalError(mstrScreenName);
-        }
-    }
-}
-
-
-
-
-
-
-private void cmdBrowse_Click() {
-    // Browse for Drive/Folder
-    try {
-      final String cstrCurrentProc = "cmdBrowse_Click"
-;      cbrfBrowseFolder
- brfFolder = new cbrfBrowseFolder
-();      String strFolderName = "";
-
-      // Set screen name in case errors are reported here or
-      // in procedures called by this Event Handler
-      modGeneral.gerhApp.setScreenName(mstrScreenName);
-
-      //' Owner of the BrowseFolder window
-      brfFolder.hWnd = Me.cbrfBrowseFolder.setHWnd();
-      //' Title
-      brfFolder.Title = "Select a Folder to which the tax files will be saved";
-      //' Initial folder
-      brfFolder.Folder = txtTaxFileFolder.Text;
-      //' Default flags
-      brfFolder.Flags = BIF_RETURNONLYFSDIRS;
-      //' Go get it
-      strFolderName = brfFolder.ShowBrowse();
-      if (!brfFolder.Cancelled) {
-        txtTaxFileFolder.Text = modGeneral.fnAddBackslash(strFolderName).toUpperCase();
-        Me.Refresh;
+      // If the User ID and Environment are empty, then the user must not be logged on, so don't
+      // attempt to open the view.
+      if (strUserID.equals("") && strEnv.equals("")) {
+        Me.sbrStatusBar.Panels(3).Text = cstrLabelPanel3+ "?";
+      } 
+      else {
+        Me.sbrStatusBar.Panels(3).Text = cstrLabelPanel3+ CStr(fnGetNbrOfDataIntegrityIssues());
       }
+      DoEvents;
       // **TODO:** label found: PROC_EXIT:;
       // Disable the error handler so errors hit here won't be handled by PROC_ERR
-  }
-  //*TODO:** the error label PROC_ERR: couldn't be found
-    try {
-
-    // Clean-up statements go here
-    modGeneral.fnFreeObject(brfFolder);
-
-    // Report the error, since this is an event handler
-    if (modGeneral.gerhApp.getErrNum() != modResConstants.gCLNGERR_NUM_DEFAULT) {
-      modGeneral.gerhApp.reportFatalError(mstrScreenName);
-    }
-    return;
-    // **TODO:** label found: PROC_ERR:;
-    switch (VBA.ex.Number) {
-        //Case statements for expected errors go here
-      case  Else:
-        // Save Err object data, if not already saved
-        modGeneral.gerhApp.saveErrObjectData(mstrScreenName+ modResConstants.gCSTRDOT+ cstrCurrentProc);
-        break;
-    }
-    /**TODO:** resume found: Resume(PROC_EXIT)*/;
-//*TODO:** the error label 0: couldn't be found
-  }
-}
+  }catch(Exception e){throw e;}
