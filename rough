@@ -1,3 +1,36 @@
+public class YourClass {
+    private StatusBar sbrStatusBar;
+    // Assuming strUserID, strEnv, and fnGetNbrOfDataIntegrityIssues are appropriately defined
+
+    public void yourMethod() {
+        try {
+            final String cstrCurrentProc = "fnUpdateStatusBar";
+            final String cstrLabelPanel1 = "User ID: ";
+            final String cstrLabelPanel2 = "Environment: ";
+            final String cstrLabelPanel3 = "# of Possible Errors in the DB: ";
+
+            this.sbrStatusBar.Panels[1].Text = cstrLabelPanel1 + strUserID;
+            this.sbrStatusBar.Panels[2].Text = cstrLabelPanel2 + strEnv;
+
+            // If the User ID and Environment are empty, then the user must not be logged on, so don't
+            // attempt to open the view.
+            if (strUserID.equals("") && strEnv.equals("")) {
+                this.sbrStatusBar.Panels[3].Text = cstrLabelPanel3 + "?";
+            } else {
+                this.sbrStatusBar.Panels[3].Text = cstrLabelPanel3 + String.valueOf(fnGetNbrOfDataIntegrityIssues());
+            }
+            Thread.sleep(0); // Simulating DoEvents
+            // **TODO:** label found: PROC_EXIT:;
+            // Disable the error handler so errors hit here won't be handled by PROC_ERR
+        } catch (Exception e) {
+            throw e;
+        }
+    }
+}
+
+
+
+
 try {
 
       final String cstrCurrentProc = "fnUpdateStatusBar"
