@@ -1,26 +1,3 @@
-try {
-
-      fso = new Scripting.FileSystemObject();
-
-      switch (true) {
-        case  optReport(EnumReport.eRPT_STATEINTERESTREPORT).chrgHourglass.getValue():
-          _rtn = fso.BuildPath(App.Path, "StateInterest_CR8.RPT");
-          break;
-
-        case  optReport(EnumReport.eRPT_CUSTOMCLAIMPAYMENTREPORT).chrgHourglass.getValue():
-          _rtn = fso.BuildPath(App.Path, "CustomClaimPayment_CR8.RPT");
-          break;
-
-        case  optReport(EnumReport.eRPT_DATAINTEGRITYISSUESREPORT).chrgHourglass.getValue():
-          _rtn = fso.BuildPath(App.Path, "DataIntegrityIssues_cr8.rpt");
-          break;
-
-        default:
-          _rtn = cstrUnknown;
-          break;
-      }
-
-
 package sunlife.usit.utility.slfvbtojavautility.utils;
 
 import java.io.BufferedReader;
