@@ -21,7 +21,7 @@ try {
 }
 
 
-and include the conditions in the below code.
+and include the conditions to remove the return statements in the below code.
 
 package sunlife.usit.utility.slfvbtojavautility.utils;
 
