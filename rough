@@ -1,3 +1,57 @@
+public static void optimizeToJava(File file) throws IOException {
+    BufferedReader reader = new BufferedReader(new FileReader(file));
+    String line = "", result = "";
+    boolean isSwitchTrue = false;
+
+    try {
+        while ((line = reader.readLine()) != null) {
+            // ... existing code ...
+
+            if (line.contains("switch (VBA.ex.Number) {")) {
+                isSwitchTrue = true;
+                line = line.replace("switch (VBA.ex.Number) {", "");
+            }
+
+            if (isSwitchTrue) {
+                if (line.contains("case  Else:")) {
+                    line = line.replace("case  Else:", "");
+                }
+
+                if (line.contains("break;")) {
+                    line = line.replace("break;", "");
+                    isSwitchTrue = false;
+                }
+            }
+
+            // ... existing code ...
+            
+            result += line + "\n";
+
+            // ... existing code ...
+        }
+
+        result = org.apache.commons.lang3.StringUtils.substringBefore(result,
+                "package controllers.logged.modules.general");
+        System.out.println(result);
+        reader.close();
+
+        FileProcessorUtility.writeToFiles(result, file.getAbsolutePath());
+
+    } catch (Exception e) {
+        System.out.println("catch");
+        e.printStackTrace();
+    }
+}
+
+
+
+
+
+
+
+
+
+
 package sunlife.usit.utility.slfvbtojavautility.utils;
 
 import java.io.BufferedReader;
