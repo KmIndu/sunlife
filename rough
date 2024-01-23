@@ -1,5 +1,8 @@
-if(line.contains("#If False Then") || line.contains("#End If"))
-				{
-					line = line.replace("#If False Then", "");
-					line = line.replace("#End If;", "");
-				}
+ if (!(strURL.toUpperCase().indexOf("HTTP", 1).equals(1))) {
+        strURL = "http://"+ strURL;
+      }
+
+
+if (!(strURL.toUpperCase().indexOf("HTTP", 1) == 1)) {
+    strURL = "http://" + strURL;
+}
