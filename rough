@@ -1,3 +1,23 @@
+if (line.contains("Scripting.FileSystemObject fso")) {
+    line = line.replace("Scripting.FileSystemObject fso", "File file");
+
+    if (!isImportAdded && line.trim().startsWith("package ")) {
+        // Add the import statement just after the package declaration
+        result += "import java.io.File;\n";
+        isImportAdded = true;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
 if (line.contains("Date dteToday")) {
             line = line.replace("Date dteToday", "Timestamp timestamp");
             
