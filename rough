@@ -1,3 +1,5 @@
-  *#If False Then
- *#End If
-removal of  these lines through code
+if(line.contains("#If False Then") || line.contains("#End If"))
+				{
+					line = line.replace("#If False Then", "");
+					line = line.replace("#End If;", "");
+				}
