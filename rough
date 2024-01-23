@@ -1,4 +1,17 @@
+final String cstrCurrentProc = "Form_Load"
+;    Const(cintNoRowsInTable As Integer == 0);
+    final String cstrOutputFile = "C:\\WrapperTest;    DBRecordSet rst = null;
+    DBField fld = null;
+    String strProperty1 = "";
+    String strProperty2 = "";
+    String strProperty3 = "";
+    Date dteToday = null;
+    Scripting.FileSystemObject fso = null;
 
-final String cstrOutputFile = "C:\\WrapperTest;    DBRecordSet rst = null;
 
-declaration of the class is faulty
+ Const cstrCurrentProc       As String = "Form_Load"
+    Const cstrOutputFile        As String = "C:\WrapperTest.txt"
+    Dim rst                     As ADODB.Recordset
+    Dim fld                     As ADODB.Field
+        Dim dteToday                As Date
+    Dim fso                     As Scripting.FileSystemObject
