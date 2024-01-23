@@ -1,3 +1,36 @@
+try {
+    boolean importAdded = false;
+
+    while ((line = reader.readLine()) != null) {
+        // Replace "DBRecordSet" with "ResultSet"
+        if (line.contains("DBRecordSet")) {
+            line = line.replace("DBRecordSet", "ResultSet");
+
+            // Check if the import statement is already added
+            if (!importAdded && line.trim().startsWith("package ")) {
+                // Add the import statement just after the package declaration
+                result += "import java.sql.ResultSet;\n";
+                importAdded = true;
+            }
+        }
+
+        // Additional logic for other replacements or conversions can go here
+        result += line + "\n";
+    }
+} catch (Exception e) {
+    e.printStackTrace();
+}
+
+
+
+
+
+
+
+
+
+
+
 final String cstrCurrentProc = "Form_Load"
 ;    Const(cintNoRowsInTable As Integer == 0);
     final String cstrOutputFile = "C:\\WrapperTest;    DBRecordSet rst = null;
