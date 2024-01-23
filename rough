@@ -2,6 +2,42 @@ try {
     boolean importAdded = false;
 
     while ((line = reader.readLine()) != null) {
+        // Replace "DBField fld = null;" with "PreparedStatement stmt = null;"
+        if (line.contains("DBField")) {
+            line = line.replace("DBField", "PreparedStatement");
+
+            // Check if the import statement is already added
+            if (!importAdded && line.trim().startsWith("package ")) {
+                // Add the import statement just after the package declaration
+                result += "import java.sql.PreparedStatement;\n";
+                importAdded = true;
+            }
+        }
+
+        // Additional logic for other replacements or conversions can go here
+        result += line + "\n";
+    }
+} catch (Exception e) {
+    e.printStackTrace();
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+try {
+    boolean importAdded = false;
+
+    while ((line = reader.readLine()) != null) {
         // Replace "DBRecordSet" with "ResultSet"
         if (line.contains("DBRecordSet")) {
             line = line.replace("DBRecordSet", "ResultSet");
