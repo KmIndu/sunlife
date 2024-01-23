@@ -1,22 +1,3 @@
-// ... existing code ...
-
-while ((line = reader.readLine()) != null) {
-    // ... existing code ...
-
-    // Logic to replace .equals(<integer>) with == <integer>
-    line = line.replaceAll("\\.equals\\((\\d+)\\)", "== $1");
-
-    // ... existing code ...
-    
-    result += line + "\n";
-
-    // ... existing code ...
-}
-
-// ... existing code ...
-
-
-
 
 final String cstrOutputFile = "C:\\WrapperTest;    DBRecordSet rst = null;
 
