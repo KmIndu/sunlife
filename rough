@@ -19,3 +19,194 @@ try {
           _rtn = cstrUnknown;
           break;
       }
+
+
+package sunlife.usit.utility.slfvbtojavautility.utils;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.Arrays;
+
+import org.apache.tomcat.util.buf.StringUtils;
+
+public class ProcessGeneratedCode2 {
+	public static void main(String[] args) throws IOException {
+
+		File directory = new File("C:\\Projects\\Tasks\\Vb6toJava\\CodeGenerated");
+		File[] filesAndDirs = directory.listFiles();
+
+		for (File file : filesAndDirs) {
+			System.out.println(file.getAbsolutePath());
+			if (file.isFile()) {
+				optimizeToJava(file);
+			}
+		}
+
+	}
+
+	public static void optimizeToJava(File file) throws IOException {
+
+		BufferedReader reader = new BufferedReader(new FileReader(file));
+		String line = "", result = "";
+		try {
+			while ((line = reader.readLine()) != null) {
+
+				// since modgeneral is used in allmost all classes so making other classes to
+				// extend it
+				if (line.contains("Class_Initialize()") || (line.contains("class_Initialize()"))) {
+
+					line = line.replace("Class_Initialize()", "initialize()");
+
+					line = line.replace("class_Initialize()", "initialize()");
+				}
+
+				if (line.contains("class_Terminate()")) {
+
+					line = line.replace("class_Terminate()", "terminate()");
+				}
+
+				if (line.contains("Class_Terminate()")) {
+
+					line = line.replace("Class_Terminate()", "terminate");
+				}
+
+				if (line.contains("Class_Initialize()")) {
+
+					line = line.replace("Class_Initialize()", "initialize");
+				}
+
+				if (line.contains("MCSTRNAME")) {
+
+					line = line.replace("MCSTRNAME", "mcstrName");
+				}
+
+				if (line.contains("m_cmdADOCommand")) {
+
+					line = line.replace("m_cmdADOCommand", "cmdADOCommand");
+				}
+
+				if (line.contains("switch (VBA.ex.Number) {")) {
+
+					line = line.replace("switch (VBA.ex.Number) {", "");
+				}
+
+				if (line.contains("case  Else:")) {
+
+					line = line.replace("case  Else:", "");
+				}
+
+				if (line.contains("break;")) {
+
+					line = line.replace("break;", "");
+				}
+
+				if (line.contains("String[] astrAllEnvironments()")) {
+
+					line = line.replace("String[] astrAllEnvironments()",
+							"String[] astrAllEnvironments = new String[100]");
+				}
+
+				if (line.contains("String[] astrAuthorizedEnvironments()")) {
+
+					line = line.replace("String[] astrAuthorizedEnvironments()",
+							"String[] astrAuthorizedEnvironments = new String[100]");
+				}
+
+				if (line.contains("Assert;")) {
+					line = "";
+					// line = line.replace("break;", "");
+				}
+
+				if (line.contains("*Option Compare Binary")) {
+
+					line = line.replace("*Option Compare Binary", "");
+				}
+
+				if (line.contains("Exit Property;")) {
+
+					line = line.replace("Exit Property;", "");
+				}
+
+				if (line.contains("__TYPE_NOT_FOUND") || line.contains("w___TYPE_NOT_FOUND")) {
+
+					line = "";
+				}
+				
+				if (line.contains("case  -2147217865  :") ||  line.contains("case  3021:") ) {
+
+					line = "";
+				}
+				
+				if (line.contains("Debug.Print(\"") ) {
+
+					line = "";
+				}
+				
+				if (line.contains("default:") ) {
+
+					line = "";
+				}
+				
+
+				if (line.contains("class ")) {
+
+					String str = line;
+					String word = "class";
+
+					String[] words = str.split(" "), data = word.split(" ");
+					int index = Arrays.asList(words).indexOf((data.length > 1) ? data[data.length - 1] : data[0]);
+
+					String className = (index == -1) ? "Not Found"
+							: ((index + 1) == words.length) ? "End" : words[index + 1];
+					System.out.println(className);
+
+					if (/* !className.equalsIgnoreCase("Not Found") && */!(line.contains("modGeneral")
+							|| line.contains("ModGeneral"))) {
+						line = line.replace(className, className + " extends ModGeneral");
+
+						line = line + " \n public static ModGeneral modGeneral = new ModGeneral(); ";
+
+						line = line + " \n public static ModResConstants modResConstants = new ModResConstants(); ";
+					}
+				}
+
+				result += line + "\n";
+
+				if (result.contains("ADODB.Command")) {
+
+					result = result.replace("ADODB.Command", "DataBaseCommand");
+				}
+
+				if (result.contains("_rtn")) {
+
+					result = result.replace("_rtn", "returnvalue");
+				}
+
+				if (result.contains("ADODB.Recordset")) {
+
+					result = result.replace("ADODB.Recordset", "DataBaseRecordSet");
+				}
+
+				if (result.contains("String()")) {
+
+					result = result.replace("String()", "String");
+				}
+
+			}
+
+			result = org.apache.commons.lang3.StringUtils.substringBefore(result,
+					"package controllers.logged.modules.general");
+			System.out.println(result);
+			reader.close();
+
+			FileProcessorUtility.writeToFiles(result, file.getAbsolutePath());
+
+		} catch (Exception e) {
+			System.out.println("catch");
+			e.printStackTrace();
+		}
+	}
+
+}
