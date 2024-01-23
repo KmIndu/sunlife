@@ -1,3 +1,28 @@
+can u plss look into the positions of return statement in the below code-
+
+try {
+
+    // Clean-up statements go here
+
+    if (modGeneral.gerhApp.getErrNum() != modResConstants.gCLNGERR_NUM_DEFAULT) {
+      modGeneral.gerhApp.propagateError(mstrScreenName+ modResConstants.gCSTRDOT+ cstrCurrentProc);
+    }
+    return;
+    // **TODO:** label found: PROC_ERR:;
+    switch (VBA.ex.Number) {
+        //Case statements for expected errors go here
+      case  Else:
+        modGeneral.gerhApp.saveErrObjectData(mstrScreenName+ modResConstants.gCSTRDOT+ cstrCurrentProc);
+        break;
+    }
+    /**TODO:** resume found: Resume(PROC_EXIT)*/;
+//*TODO:** the error label 0: couldn't be found
+  }
+}
+
+
+and include the conditions in the below code.
+
 package sunlife.usit.utility.slfvbtojavautility.utils;
 
 import java.io.BufferedReader;
