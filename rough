@@ -1,8 +1,3 @@
- if (!(strURL.toUpperCase().indexOf("HTTP", 1).equals(1))) {
-        strURL = "http://"+ strURL;
-      }
+final String cstrOutputFile = "C:\\WrapperTest;    DBRecordSet rst = null;
 
-
-if (!(strURL.toUpperCase().indexOf("HTTP", 1) == 1)) {
-    strURL = "http://" + strURL;
-}
+declaration of the class is faulty
