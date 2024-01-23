@@ -1,1 +1,9 @@
-
+if (line.contains("Date dteToday")) {
+            line = line.replace("Date dteToday", "Timestamp timestamp");
+            
+            if (!isImportAdded && line.trim().startsWith("package ")) {
+                // Add the import statement just after the package declaration
+                result += "import java.sql.Timestamp;\n";
+                isImportAdded = true;
+            }
+        }
