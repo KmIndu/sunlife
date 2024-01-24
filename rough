@@ -1,1 +1,55 @@
+public class Main {
+    public static void main(String[] args) {
+        String line = "switch (true) {\n" +
+                      "  case  optReport(EnumReport.eRPT_STATEINTERESTREPORT).chrgHourglass.getValue():\n" +
+                      "    fnPrepare_StateInterestReport();\n" +
+                      "    break;\n" +
+                      "  case  optReport(EnumReport.eRPT_CUSTOMCLAIMPAYMENTREPORT).chrgHourglass.getValue():\n" +
+                      "    fnPrepare_CustomClaimPaymentReport();\n" +
+                      "    break;\n" +
+                      "  case  optReport(EnumReport.eRPT_DATAINTEGRITYISSUESREPORT).chrgHourglass.getValue():\n" +
+                      "    fnPrepare_DataIntegrityIssuesReport();\n" +
+                      "    break;\n" +
+                      "  default:\n" +
+                      "    modGeneral.gerhApp.saveAppSpecificErr(vbObjectError + modResConstants.gCRES_NERR_UNEXPECTED_VAL_SELECT_CASE, mstrScreenName+ modResConstants.gCSTRDOT+ cstrCurrentProc);\n" +
+                      "    // **TODO:** goto found: GoTo PROC_EXIT;\n" +
+                      "    break;\n" +
+                      "}";
+        String result = "";
+        boolean isSwitchTrue = false;
+
+        // Replacing switch condition with always true to if-else
+        if (line.contains("switch (true) {")) {
+            isSwitchTrue = true;
+            line = line.replace("switch (true) {", "");
+        }
+        
+        if (isSwitchTrue) {
+            if (line.contains("case ")) {
+                line = line.replace("case ", "if (") + ") {\n";
+            }
+
+            if (line.contains("break;")) {
+                line = line.replace("break;", "}\n");
+                isSwitchTrue = false;
+            }
+        } else {
+            if (line.contains("case ")) {
+                line = line.replace("case ", "else if (") + ") {\n";
+            }
+
+            if (line.contains("break;")) {
+                line = line.replace("break;", "}\n");
+                isSwitchTrue = false;
+            }
+
+            if (line.contains("default:")) {
+                line = line.replace("default:", "else {\n");
+            }
+        }
+
+        result += line;
+        System.out.println(result);
+    }
+}
 
