@@ -1,3 +1,29 @@
+public class Main {
+    public static void main(String[] args) {
+        String line = "*#If False Then  mconArchiveDB points to the Archive SQL Server database corresponding to the \"active\" database to which the user is currently logged on. This is created anew during Form_Load and destroyed in Form_Unload.*#End If";
+        String result = "";
+
+        while (line != null) {
+            // Removal of line #If False Then and #End If through code
+            if (line.contains("#If False Then") || line.contains("#End If")) {
+                line = line.replace("#If False Then", "");
+                line = line.replace("#End If", "");
+            }
+            result += line + "\n";
+        }
+
+        // Print or use the 'result' variable as needed
+        System.out.println(result);
+    }
+}
+
+
+
+
+
+
+
+
 public class Main
 {
 	public static void main(String[] args) {
