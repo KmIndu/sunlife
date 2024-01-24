@@ -1,54 +1,57 @@
 public class Main {
     public static void main(String[] args) {
-        String line = "Public Const BIF_RETURNONLYFSDIRS = &H1";
+        String line = "switch (true) {
+          case  optReport(EnumReport.eRPT_STATEINTERESTREPORT).chrgHourglass.getValue():
+            fnPrepare_StateInterestReport();
+            break;
+
+          case  optReport(EnumReport.eRPT_CUSTOMCLAIMPAYMENTREPORT).chrgHourglass.getValue():
+            fnPrepare_CustomClaimPaymentReport();
+            break;
+
+          case  optReport(EnumReport.eRPT_DATAINTEGRITYISSUESREPORT).chrgHourglass.getValue():
+            fnPrepare_DataIntegrityIssuesReport();
+            break;
+
+          default:
+            modGeneral.gerhApp.saveAppSpecificErr(vbObjectError + modResConstants.gCRES_NERR_UNEXPECTED_VAL_SELECT_CASE, mstrScreenName+ modResConstants.gCSTRDOT+ cstrCurrentProc);
+            // **TODO:** goto found: GoTo PROC_EXIT;
+
+            break;
+        }";
         String result = "";
 
-        if (line.trim().startsWith("Public Const")) {
-            System.out.println("Entered if statement");
-            String[] parts = line.trim().split("\\s+");
+        //Replacing Switch condition with always true to if-else
+				if (line.contains("switch (true) {")) {
+					isSwitchTrue = true;
+					line = line.replace("switch (true) {", " ");
+				}
+				if (isSwitchTrue) {
+					if (line.contains("case:")) {
+						line = line.replace("case:", "if(") + "){\n";
+					}
 
-            if (parts.length >= 6) {
-                String constantName = parts[3];
-                String constantValue = parts[5].replace("&H", "0x");
-                result = "public static final int " + constantName + " = " + constantValue + ";\n";
-            } else {
-                result = line;  // Keep the original line if it doesn't have enough parts
-            }
-        } else {
-            result = line;  // Keep the original line if it doesn't contain "Public Const"
-        }
+					if (line.contains("break;")) {
+						line = line.replace("break;", "\n");
+						isSwitchTrue = false;
+					}
+				}
+				if (!isSwitchTrue) {
+					if (line.contains("case:")) {
+						line = line.replace("case:", "else if(") + "){\n";
+					}
 
-        System.out.println(result);
-    }
-}
-
-
-
-
-
-
-
-
-public class Main {
-    public static void main(String[] args) {
-        String line = "Public Const BIF_RETURNONLYFSDIRS = &H1";
-        String result = "";
-
-        if (line.contains("Public Const")) {
-            System.out.println("Entered if statement");
-            String[] parts = line.split(" ");
-
-            if (parts.length >= 6) {
-                String constantName = parts[3];
-                String constantValue = parts[5].replace("&H", "0x");
-                line = "public static final int " + constantName + " = " + constantValue + ";\n";
-            } 
-            result = line;
+					if (line.contains("break;")) {
+						line = line.replace("break;", "\n");
+						isSwitchTrue = false;
+					}
+					if (line.contains("default:")) {
+						line = line.replace("default:", "else if(") + "){\n";
+					}
+				}
         }
         
-
+result += line;
         System.out.println(result);
     }
 }
-Input: Public Const BIF_RETURNONLYFSDIRS = &H1
-Output: public static final int BIF_RETURNONLYFSDIRS = 0x1;
