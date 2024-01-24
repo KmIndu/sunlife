@@ -1,45 +1,22 @@
-public class Main {
-    public static void main(String[] args) {
-        String line = "*#If False Then  mconArchiveDB points to the Archive SQL Server database corresponding to the \"active\" database to which the user is currently logged on. This is created anew during Form_Load and destroyed in Form_Unload.*#End If";
-        String result = "";
-
-        while (line != null) {
-            // Removal of line #If False Then and #End If through code
-            if (line.contains("#If False Then") || line.contains("#End If")) {
-                line = line.replace("#If False Then", "");
-                line = line.replace("#End If", "");
-            }
-            result += line + "\n";
-        }
-
-        // Print or use the 'result' variable as needed
-        System.out.println(result);
-    }
-}
-
-
-
-
-
-
-
-
 public class Main
 {
 	public static void main(String[] args) {
-		String line = "*#If False Then  mconArchiveDB points to the Archive SQL Server database corresponding to the "active" database to which the user is currently logged on. This is created anew during Form_Load and destroyed in Form_Unload.*#End If";
-		
-		while (line != null) {
+	    String line = "Public Const BIF_RETURNONLYFSDIRS = &H1";
+        String result = "";
+		if (line.contains("Public Const")) {
+					String[] parts = line.split(" ");
+					String constantName = parts[3];
+					String constantValue = parts[5].replace("&H", "0x");
 
-				//Removal of line #If False Then and #End If through code
-			if (line.contains("#If False Then") || line.contains("#End If")) {
-					line = line.replace("#If False Then", "");
-					line = line.replace("#End If", "");
-
-//					line=""; //Another way to remove these lines
-			}
-			result += line + "\n";
+					line += "public static final int " + constantName + " = " + constantValue + ";\n";
 		}
-	
+		result = line;
+        
+
+        // Print or use the 'result' variable as needed
+        System.out.println(result);
 	}
 }
+
+Exception in thread "main" java.lang.ArrayIndexOutOfBoundsException: Index 5 out of bounds for length 5
+        at Main.main(Main.java:17)
