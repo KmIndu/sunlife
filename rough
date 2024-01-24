@@ -10,6 +10,32 @@ public class Main {
                 String constantName = parts[3];
                 String constantValue = parts[5].replace("&H", "0x");
                 result = "public static final int " + constantName + " = " + constantValue + ";\n";
+            } else {
+                System.out.println("Invalid constant line: " + line);
+            }
+        }
+
+        System.out.println(result);
+    }
+}
+
+
+
+
+
+
+public class Main {
+    public static void main(String[] args) {
+        String line = "Public Const BIF_RETURNONLYFSDIRS = &H1";
+        String result = "";
+
+        if (line.contains("Public Const")) {
+            String[] parts = line.split(" ");
+
+            if (parts.length >= 6) {
+                String constantName = parts[3];
+                String constantValue = parts[5].replace("&H", "0x");
+                result = "public static final int " + constantName + " = " + constantValue + ";\n";
             }
         } 
         result+= line;  
