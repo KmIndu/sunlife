@@ -1,139 +1,19 @@
-package sunlife.usit.utility.slfvbtojavautility.utils;
-
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.Arrays;
-
-import org.apache.tomcat.util.buf.StringUtils;
-
-public class ProcessGeneratedCode2 extends ProcessGeneratedCode {
-	public static void main(String[] args) throws IOException {
-
-		File directory = new File("C:\\Projects\\Tasks\\Vb6toJava\\CodeGenerated");
-		File[] filesAndDirs = directory.listFiles();
-
-		for (File file : filesAndDirs) {
-			System.out.println(file.getAbsolutePath());
-			if (file.isFile()) {
-				optimizeToJava(file);
-			}
-		}
-
-	}
-
-	public static void optimizeToJava(File file) throws IOException {
-		BufferedReader reader = new BufferedReader(new FileReader(file));
-		String line = "", result = "";
-		boolean isSwitchTrue = false;
-
-		try {
-			boolean importAdded1 = false;
-			boolean importAdded2 = false;
-			boolean importAdded3 = false;
-			boolean importAdded4 = false;
-
-			while ((line = reader.readLine()) != null) {
+public class Main
+{
+	public static void main(String[] args) {
+		String line = "*#If False Then  mconArchiveDB points to the Archive SQL Server database corresponding to the "active" database to which the user is currently logged on. This is created anew during Form_Load and destroyed in Form_Unload.*#End If";
+		
+		while (line != null) {
 
 				//Removal of line #If False Then and #End If through code
-				if (line.contains("#If False Then") || line.contains("#End If")) {
+			if (line.contains("#If False Then") || line.contains("#End If")) {
 					line = line.replace("#If False Then", "");
 					line = line.replace("#End If", "");
 
 //					line=""; //Another way to remove these lines
-				}
-
-
-
-				// Logic to replace .equals(<integer>) with == <integer>
-				line = line.replaceAll("\\.equals\\((\\d+)\\)", "== $1");
-				//Check for equals method on integer number
-//				if(line.contains(".equals(1)"))
-//				{
-//					line = line.replace(".equals(1)", "==1");
-//				}
-
-
-
-				// Replace "DBRecordset" with "ResultSet"
-				if (line.contains("DBRecordSet")) {
-					line = line.replace("DBRecordSet", "ResultSet");
-
-					// Check if the import statement is already added
-					if (!importAdded1 && line.trim().startsWith("package ")) {
-						// Add the import statement just after the package declaration
-						result += "import java.sql.ResultSet;\n";
-						importAdded1 = true;
-					}
-				}
-
-
-
-				// Replace "DBField" with "PreparedStatement"
-				if (line.contains("DBField")) {
-						line = line.replace("DBField", "PreparedStatement");
-
-						// Check if the import statement is already added
-						if (!importAdded2 && line.trim().startsWith("package ")) {
-							// Add the import statement just after the package declaration
-							result += "import java.sql.PreparedStatement;\n";
-							importAdded2 = true;
-						}
-				}
-
-
-				//Replace "Date dteToday" with "Timestamp timestamp"
-				if (line.contains("Date dteToday")) {
-						line = line.replace("Date dteToday", "Timestamp timestamp");
-
-						if (!importAdded3 && line.trim().startsWith("package ")) {
-							// Add the import statement just after the package declaration
-							result += "import java.sql.Timestamp;\n";
-							importAdded3 = true;
-						}
-				}
-
-
-				//Replace "Scripting.FileSystemObject" with "File file"
-				if (line.contains("Scripting.FileSystemObject fso")) {
-					line = line.replace("Scripting.FileSystemObject fso", "File file");
-
-					if (!importAdded4 && line.trim().startsWith("package ")) {
-						// Add the import statement just after the package declaration
-						result += "import java.io.File;\n";
-						importAdded4 = true;
-					}
-				}
-
-
-
-				// Handle VB6 constant declaration
-				//Wrong: Public Const BIF_RETURNONLYFSDIRS = &H1
-				//Correct: public static final int BIF_RETURNONLYFSDIRS = 0x1;
-
-				if (line.contains("Public Const")) {
-					String[] parts = line.split(" ");
-					String constantName = parts[3];
-					String constantValue = parts[5].replace("&H", "0x");
-
-					result += "public static final int " + constantName + " = " + constantValue + ";\n";
-				}
-
-				
-
-				result += line + "\n";
-				}
-
-				result = org.apache.commons.lang3.StringUtils.substringBefore(result,
-						"package controllers.logged.modules.general");
-				System.out.println(result);
-				reader.close();
-
-				FileProcessorUtility.writeToFiles(result, file.getAbsolutePath());
-
-			} catch (IOException ioException) {
-			ioException.printStackTrace();
+			}
+			result += line + "\n";
 		}
+	
 	}
 }
