@@ -1,3 +1,13 @@
+if (line.contains("Public Const")) {
+            // Handle VB6 constant declaration
+            String[] parts = line.split(" ");
+            String constantName = parts[3];
+            String constantValue = parts[5].replace("&H", "0x");
+
+            result += "public static final int " + constantName + " = " + constantValue + ";\n";
+        }
+
+
 VB6-
 Public Const BIF_RETURNONLYFSDIRS = &H1
 
