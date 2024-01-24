@@ -1,3 +1,33 @@
+public class Main {
+    public static void main(String[] args) {
+        String line = "Public Const BIF_RETURNONLYFSDIRS = &H1";
+        String result = "";
+
+        if (line.contains("Public Const")) {
+            String[] parts = line.split(" ");
+            
+            // Check if 'parts' has enough elements
+            if (parts.length >= 6) {
+                String constantName = parts[3];
+                String constantValue = parts[5].replace("&H", "0x");
+                result += "public static final int " + constantName + " = " + constantValue + ";\n";
+            } else {
+                System.out.println("Invalid line format: " + line);
+            }
+        } else {
+            result = line;
+        }
+
+        // Print or use the 'result' variable as needed
+        System.out.println(result);
+    }
+}
+
+
+
+
+
+
 public class Main
 {
 	public static void main(String[] args) {
