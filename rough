@@ -3,6 +3,37 @@ public class Main {
         String line = "Public Const BIF_RETURNONLYFSDIRS = &H1";
         String result = "";
 
+        if (line.trim().startsWith("Public Const")) {
+            System.out.println("Entered if statement");
+            String[] parts = line.trim().split("\\s+");
+
+            if (parts.length >= 6) {
+                String constantName = parts[3];
+                String constantValue = parts[5].replace("&H", "0x");
+                result = "public static final int " + constantName + " = " + constantValue + ";\n";
+            } else {
+                result = line;  // Keep the original line if it doesn't have enough parts
+            }
+        } else {
+            result = line;  // Keep the original line if it doesn't contain "Public Const"
+        }
+
+        System.out.println(result);
+    }
+}
+
+
+
+
+
+
+
+
+public class Main {
+    public static void main(String[] args) {
+        String line = "Public Const BIF_RETURNONLYFSDIRS = &H1";
+        String result = "";
+
         if (line.contains("Public Const")) {
             System.out.println("Entered if statement");
             String[] parts = line.split(" ");
