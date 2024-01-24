@@ -1,29 +1,5 @@
-if (line.contains("Scripting.FileSystemObject fso")) {
-    line = line.replace("Scripting.FileSystemObject fso", "File file");
+VB6-
+Public Const BIF_RETURNONLYFSDIRS = &H1
 
-    if (!isImportAdded && line.trim().startsWith("package ")) {
-        // Add the import statement just after the package declaration
-        result += "import java.io.File;\n";
-        isImportAdded = true;
-    }
-}
-
-
-
-
-
-
-
-
-
-
-
-if (line.contains("Date dteToday")) {
-            line = line.replace("Date dteToday", "Timestamp timestamp");
-            
-            if (!isImportAdded && line.trim().startsWith("package ")) {
-                // Add the import statement just after the package declaration
-                result += "import java.sql.Timestamp;\n";
-                isImportAdded = true;
-            }
-        }
+Java-
+*Public Const BIF_RETURNONLYFSDIRS = &H1
