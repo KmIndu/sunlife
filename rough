@@ -1,3 +1,11 @@
+This:
+Public Const BIF_RETURNONLYFSDIRS = &H1
+
+That:
+public static final int BIF_RETURNONLYFSDIRS = 0x1;
+
+
+
 if (line.contains("Public Const")) {
             // Handle VB6 constant declaration
             String[] parts = line.split(" ");
