@@ -10,43 +10,14 @@ public class Main {
             if (parts.length >= 6) {
                 String constantName = parts[3];
                 String constantValue = parts[5].replace("&H", "0x");
-                result += "public static final int " + constantName + " = " + constantValue + ";\n";
-            } else {
-                System.out.println("Invalid line format: " + line);
-            }
-        } else {
-            result = line;
-        }
+                line+= "public static final int " + constantName + " = " + constantValue + ";\n";
+            } 
+        } 
+        result+= line;
+        
 
         // Print or use the 'result' variable as needed
         System.out.println(result);
     }
 }
-
-
-
-
-
-
-public class Main
-{
-	public static void main(String[] args) {
-	    String line = "Public Const BIF_RETURNONLYFSDIRS = &H1";
-        String result = "";
-		if (line.contains("Public Const")) {
-					String[] parts = line.split(" ");
-					String constantName = parts[3];
-					String constantValue = parts[5].replace("&H", "0x");
-
-					line += "public static final int " + constantName + " = " + constantValue + ";\n";
-		}
-		result = line;
-        
-
-        // Print or use the 'result' variable as needed
-        System.out.println(result);
-	}
-}
-
-Exception in thread "main" java.lang.ArrayIndexOutOfBoundsException: Index 5 out of bounds for length 5
-        at Main.main(Main.java:17)
+Public Const BIF_RETURNONLYFSDIRS = &H1
