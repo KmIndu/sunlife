@@ -1,3 +1,13 @@
+if (!importAdded1 && line.trim().startsWith("import java.until")) {
+                    // Add the import statements just after the existing imports
+                    result += "import java.sql.ResultSet;\nimport java.sql.PreparedStatement;\nimport java.sql.Timestamp;\nimport java.io.File;\n";
+                    importAdded1 = true;
+                }
+
+
+
+
+
 // Replace "DBRecordset" with "ResultSet"
 				if (line.contains("DBRecordSet")) {
 					line = line.replace("DBRecordSet", "ResultSet");
