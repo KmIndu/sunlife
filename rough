@@ -1,3 +1,21 @@
+if (line.contains("for (lngIndex = LBound(m_audtEnvironments); lngIndex <= m_audtEnvironments.length; lngIndex++) {")) {
+                    // Correct the for loop to Java syntax
+                    line = "for (int lngIndex = 0; lngIndex < m_audtEnvironments.length; lngIndex++) {";
+                }
+
+                if (line.contains("if (m_audtEnvironments[lngIndex]..environmentName.equals(strEnvName)) {")) {
+                    // Correct the array access and method call in the if condition
+                    line = "if (m_audtEnvironments[lngIndex].environmentName.equals(strEnvName)) {";
+                }
+
+                if (line.contains("returnvalue = m_audtEnvironments[lngIndex]..activeDatabase;")) {
+                    // Correct the array access and method call for assignment
+                    line = "returnvalue = m_audtEnvironments[lngIndex].activeDatabase;";
+                }
+
+
+
+
 VB6-
 For lngIndex = LBound(m_audtEnvironments) To UBound(m_audtEnvironments)
         If m_audtEnvironments(lngIndex).EnvironmentName = strEnvName Then
