@@ -1,8 +1,19 @@
-if (line.contains("if (pconIn.getADOConn().State == adStateClosed) {")) {
-                    line = line.replace("if (pconIn.getADOConn().State == adStateClosed) {",
-                            "if (pconIn.getADOConn().getState() == adStateClosed) {");
-                }
+public class Main {
+    public static void main(String[] args) {
+        String line = "if (pconIn.getADOConn().State == adStateClosed) {\n" +
+                      "else if (prstInOut.State == adStateOpen) {";
+        
+       if (line.contains(".State == adStateClosed) {")) {
+                    line = line.replace(".State == adState) {",
+                            ".getState() == adState) {");
+        }
+
+        
+        String result = line + "\n";
+
+        
+        System.out.println(result);
+    }
+}
 
 
-
-if (pconIn.getADOConn().State == adStateClosed)
