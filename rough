@@ -1,1 +1,26 @@
-here-
+public class Main {
+    public static void main(String[] args) {
+        String line = "private static final int BFFM_INITIALIZED = 1;
+          private static final int WM_USER = 0x400;
+          private static final Long BFFM_SETSELECTIONA = (WM_USER;
+          private static final Long BFFM_SETSELECTIONW = (WM_USER;";
+        String result = "";
+        
+        
+        if (line.contains("private static final Long BFFM_SETSELECTIONA = (WM_USER;")) {
+					line = line.replace("private static final Long BFFM_SETSELECTIONA = (WM_USER;", "private static final Long BFFM_SETSELECTIONA = (WM_USER + 102);");
+		}
+		
+		if (line.contains(" private static final Long BFFM_SETSELECTIONW = (WM_USER;")) {
+					line = line.replace(" private static final Long BFFM_SETSELECTIONW = (WM_USER;", " private static final Long BFFM_SETSELECTIONW = (WM_USER + 103);");
+		}	
+        result+= line;
+           
+           
+
+        
+
+        // Print or use the 'result' variable as needed
+        System.out.println(result);
+    }
+}
