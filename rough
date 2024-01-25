@@ -1,18 +1,24 @@
-  if ( optReport(EnumReport.eRPT_STATEINTERESTREPORT).chrgHourglass.getValue():
-    fnPrepare_StateInterestReport();
-    }
+// Replace "DBRecordset" with "ResultSet"
+				if (line.contains("DBRecordSet")) {
+					line = line.replace("DBRecordSet", "ResultSet");
+				}
 
-  if ( optReport(EnumReport.eRPT_CUSTOMCLAIMPAYMENTREPORT).chrgHourglass.getValue():
-    fnPrepare_CustomClaimPaymentReport();
-    }
 
-  if ( optReport(EnumReport.eRPT_DATAINTEGRITYISSUESREPORT).chrgHourglass.getValue():
-    fnPrepare_DataIntegrityIssuesReport();
-    }
+				// Replace "DBField" with "PreparedStatement"
+				if (line.contains("DBField")) {
+					line = line.replace("DBField", "PreparedStatement");
+				}
 
-  default:
-    modGeneral.gerhApp.saveAppSpecificErr(vbObjectError + modResConstants.gCRES_NERR_UNEXPECTED_VAL_SELECT_CASE, mstrScreenName+ modResConstants.gCSTRDOT+ cstrCurrentProc);
-    // **TODO:** goto found: GoTo PROC_EXIT;
-    }
 
-}) {
+				//Replace "Date dteToday" with "Timestamp timestamp"
+				if (line.contains("Date dteToday")) {
+					line = line.replace("Date dteToday", "Timestamp timestamp");
+					}
+				}
+
+
+				//Replace "Scripting.FileSystemObject" with "File file"
+				if (line.contains("Scripting.FileSystemObject fso")) {
+					line = line.replace("Scripting.FileSystemObject fso", "File file");
+					}
+				}
