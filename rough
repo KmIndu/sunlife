@@ -1,12 +1,1 @@
-VB6
-Private Const BFFM_INITIALIZED = 1
-Private Const WM_USER = &H400
-Private Const BFFM_SETSELECTIONA As Long = (WM_USER + 102)
-Private Const BFFM_SETSELECTIONW As Long = (WM_USER + 103)
 
-
-Java
-private static final int BFFM_INITIALIZED = 1;
-private static final int WM_USER = 0x400;
-private static final Long BFFM_SETSELECTIONA = (WM_USER;
-private static final Long BFFM_SETSELECTIONW = (WM_USER;
