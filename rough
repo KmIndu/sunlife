@@ -1,28 +1,30 @@
-if (line.contains("for (lngIndex = LBound(m_audtEnvironments); lngIndex <= m_audtEnvironments.length; lngIndex++) {")) {
+public class Main {
+    public static void main(String[] args) {
+        String line = "for (lngIndex = LBound(m_audtEnvironments); lngIndex <= m_audtEnvironments.length; lngIndex++) {\n" +
+                      "if (m_audtEnvironments[lngIndex]..environmentName.equals(strEnvName)) {\n" +
+                      "returnvalue = m_audtEnvironments[lngIndex]..activeDatabase;\n" +
+                      "}";
+        String result = "";
+
+        if (line.contains("for (lngIndex = LBound(m_audtEnvironments); lngIndex <= m_audtEnvironments.length; lngIndex++) {")) {
                     // Correct the for loop to Java syntax
                     line = "for (int lngIndex = 0; lngIndex < m_audtEnvironments.length; lngIndex++) {";
-                }
+        }
 
-                if (line.contains("if (m_audtEnvironments[lngIndex]..environmentName.equals(strEnvName)) {")) {
+        if (line.contains("if (m_audtEnvironments[lngIndex]..environmentName.equals(strEnvName)) {")) {
                     // Correct the array access and method call in the if condition
                     line = "if (m_audtEnvironments[lngIndex].environmentName.equals(strEnvName)) {";
-                }
+        }
 
-                if (line.contains("returnvalue = m_audtEnvironments[lngIndex]..activeDatabase;")) {
+        if (line.contains("returnvalue = m_audtEnvironments[lngIndex]..activeDatabase;")) {
                     // Correct the array access and method call for assignment
                     line = "returnvalue = m_audtEnvironments[lngIndex].activeDatabase;";
-                }
+        }
 
+        result += line;
 
+        // Print or use the 'result' variable as needed
+        System.out.println(result);
+    }
+}
 
-
-VB6-
-For lngIndex = LBound(m_audtEnvironments) To UBound(m_audtEnvironments)
-        If m_audtEnvironments(lngIndex).EnvironmentName = strEnvName Then
-            ActiveDatabase = m_audtEnvironments(lngIndex).ActiveDatabase
-
-
-Java-
-for (lngIndex = LBound(m_audtEnvironments); lngIndex <= m_audtEnvironments.length; lngIndex++) {
-                      if (m_audtEnvironments[lngIndex]..environmentName.equals(strEnvName)) {
-                          returnvalue = m_audtEnvironments[lngIndex]..activeDatabase;
