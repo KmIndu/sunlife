@@ -1,3 +1,44 @@
+public class Main {
+    public static void main(String[] args) {
+        String line = "for (lngIndex = LBound(m_audtEnvironments); lngIndex <= m_audtEnvironments.length; lngIndex++) {\n" +
+                      "if (m_audtEnvironments[lngIndex]..environmentName.equals(strEnvName)) {\n" +
+                      "returnvalue = m_audtEnvironments[lngIndex]..activeDatabase;\n" +
+                      "}";
+        
+        // Check if the line contains the original content before making replacements
+        if (line.contains("for (lngIndex = LBound(m_audtEnvironments); lngIndex <= m_audtEnvironments.length; lngIndex++) {")) {
+            line = line.replace(
+                "for (lngIndex = LBound(m_audtEnvironments); lngIndex <= m_audtEnvironments.length; lngIndex++) {",
+                "for (int lngIndex = 0; lngIndex < m_audtEnvironments.length; lngIndex++) {");
+        }
+        
+        if (line.contains("if (m_audtEnvironments[lngIndex]..environmentName.equals(strEnvName)) {")) {
+            line = line.replace(
+                "if (m_audtEnvironments[lngIndex]..environmentName.equals(strEnvName)) {",
+                "if (m_audtEnvironments[lngIndex].environmentName.equals(strEnvName)) {");
+        }
+        
+        if (line.contains("returnvalue = m_audtEnvironments[lngIndex]..activeDatabase;")) {
+            line = line.replace(
+                "returnvalue = m_audtEnvironments[lngIndex]..activeDatabase;",
+                "returnvalue = m_audtEnvironments[lngIndex].activeDatabase;");
+        }
+
+        // Replace .. with .
+        line = line.replace("..", ".");
+
+        // Add the modified line to result
+        String result = line + "\n";
+
+        // Print or use the 'result' variable as needed
+        System.out.println(result);
+    }
+}
+
+
+
+
+
 for (lngIndex = LBound(m_audtEnvironments); lngIndex <= m_audtEnvironments.length; lngIndex++) {
                       if (m_audtEnvironments[lngIndex]..environmentName.equals(strEnvName)) {
                           returnvalue = m_audtEnvironments[lngIndex]..archiveDatabase;
