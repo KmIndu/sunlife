@@ -1,1 +1,8 @@
+if (line.contains("if (pconIn.getADOConn().State == adStateClosed) {")) {
+                    line = line.replace("if (pconIn.getADOConn().State == adStateClosed) {",
+                            "if (pconIn.getADOConn().getState() == adStateClosed) {");
+                }
+
+
+
 if (pconIn.getADOConn().State == adStateClosed)
