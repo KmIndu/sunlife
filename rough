@@ -1,2 +1,2 @@
-optLOB(EnumLOB.ELOB_ALLOFTHEABOVE) = true;
-      
+ *#Const DEBUG_ERH = False
+          *#Const DEBUG_RST = False
