@@ -1,19 +1,19 @@
-line = line.replace("for (intAllIndex = LBound(astrAllEnvironments); intAllIndex <= astrAllEnvironments.length; intAllIndex++) {", "")
-                           .replace("//SQL_INTEGRATED_SECURITY If fnIsAuthorized(strUserID, astrAllEnvironments(intAllIndex)) Then", "")
-                           .replace("astrAuthorizedEnvironments[intAuthIndex] = astrAllEnvironments[intAllIndex];", "")
-                           .replace("intAuthIndex = intAuthIndex + 1;", "")
-                           .replace("//SQL_INTEGRATED_SECURITY End If", "");
+VB6-
+ Const cstrDummyApp_UserId        As String = "CLAIMAPP"     ' "claimapp"
+    Const cstrDummyApp_Password      As String = "CLAIMAPP"     ' "claimapp"
+    
+    Const clngSprocParamCount        As Long = 2                ' # of input or output params sproc expects
+    Const cstrSproc                  As String = "sp_helpuser"  ' Stored procedure to execute
 
-
-
-
-
-
-
-
-for (intAllIndex = LBound(astrAllEnvironments); intAllIndex <= astrAllEnvironments.length; intAllIndex++) {
-                      //SQL_INTEGRATED_SECURITY If fnIsAuthorized(strUserID, astrAllEnvironments(intAllIndex)) Then
-                      astrAuthorizedEnvironments[intAuthIndex] = astrAllEnvironments[intAllIndex];
-                      intAuthIndex = intAuthIndex + 1;
-                      //SQL_INTEGRATED_SECURITY End If
-                  }
+Wrong Java-
+ "CLAIMAPP"
+      .equals(Const cstrDummyApp_UserId As String);
+              //' "claimapp"
+              "CLAIMAPP"
+      .equals(Const cstrDummyApp_Password As String);
+      
+              //' # of input or output params sproc expects
+Const(Const(Const(Const(clngSprocParamCount As Long == 2);
+              //' Stored procedure to execute
+              "sp_helpuser"
+      .equals(Const cstrSproc As String);
