@@ -1,2 +1,6 @@
- *#Const DEBUG_ERH = False
-          *#Const DEBUG_RST = False
+for (intAllIndex = LBound(astrAllEnvironments); intAllIndex <= astrAllEnvironments.length; intAllIndex++) {
+                      //SQL_INTEGRATED_SECURITY If fnIsAuthorized(strUserID, astrAllEnvironments(intAllIndex)) Then
+                      astrAuthorizedEnvironments[intAuthIndex] = astrAllEnvironments[intAllIndex];
+                      intAuthIndex = intAuthIndex + 1;
+                      //SQL_INTEGRATED_SECURITY End If
+                  }
