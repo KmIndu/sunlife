@@ -1,1 +1,1 @@
-m_strAdmnSystCd..value = strValue;
+returnvalue = fnGetProperty(strTagIn)..allowableCharacters;
