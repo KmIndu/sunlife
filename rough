@@ -1,3 +1,15 @@
+String line = "Byte[255] abytLookup(255) = null;";
+
+if (line.contains("Byte[255] abytLookup(255) = null;")) {
+    line = line.replace("Byte[255] abytLookup(255) = null;", "byte[] abytLookup = new byte[256];");
+}
+
+System.out.println(line);
+
+
+
+
+
 VB6-
 Byte[255] abytLookup(255) =   null;
 
