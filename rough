@@ -1,19 +1,11 @@
-VB6-
- Const cstrDummyApp_UserId        As String = "CLAIMAPP"     ' "claimapp"
-    Const cstrDummyApp_Password      As String = "CLAIMAPP"     ' "claimapp"
-    
-    Const clngSprocParamCount        As Long = 2                ' # of input or output params sproc expects
-    Const cstrSproc                  As String = "sp_helpuser"  ' Stored procedure to execute
+if(line.contains("\"CLAIMAPP\"" + ".equals(Const cstrDummyApp_UserId As String);"))
+					line= line.replace("\"CLAIMAPP\"" + ".equals(Const cstrDummyApp_UserId As String);", "final String cstrDummyApp_UserId = \"CLAIMAPP\";");
 
-Wrong Java-
- "CLAIMAPP"
-      .equals(Const cstrDummyApp_UserId As String);
-              //' "claimapp"
-              "CLAIMAPP"
-      .equals(Const cstrDummyApp_Password As String);
-      
-              //' # of input or output params sproc expects
-Const(Const(Const(Const(clngSprocParamCount As Long == 2);
-              //' Stored procedure to execute
-              "sp_helpuser"
-      .equals(Const cstrSproc As String);
+				if(line.contains("\"CLAIMAPP\"" + ".equals(Const cstrDummyApp_Password As String);"))
+					line= line.replace("\"CLAIMAPP\"" + ".equals(Const cstrDummyApp_Password As String);", "final String cstrDummyApp_Password = \"CLAIMAPP\";");
+
+				if(line.contains("Const(Const(Const(Const(clngSprocParamCount As Long == 2);"))
+					line=line.replace("Const(Const(Const(Const(clngSprocParamCount As Long == 2);", "final long clngSprocParamCount=2;");
+
+				if(line.contains("\"sp_helpuser\" + .equals(Const cstrSproc As String);"))
+					line=line.replace("\"sp_helpuser\"" + ".equals(Const cstrSproc As String);", "final String cstrSproc =\"sp_helpuser\";");
