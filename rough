@@ -1,16 +1,26 @@
-if(strLine.contains("New")  && strLine.contains("null") && strLine.charAt(strLine.length()-1)!=';'){
-            String[] words = G.splitSpace(strLine);
+// Original line from VB6 code
+String line = "Byte[255] abytLookup(255) = null;";
 
-            //idx 0- New
-            //idx 1- brfFolder
-            //idx 2- =
-            //idx 3- null;
-            //idx4- cbrfBrowseFolder
+// Check if the line matches the specific pattern
+if (line.contains("Byte[255]") && line.contains("null") && line.charAt(line.length() - 1) != ';') {
+    // Split the line into words based on whitespace
+    String[] words = line.split("\\s");
 
-            String className = words[4];
-            String varName = words[1];
+    // Extract relevant information from the words
+    // words[0] - Byte[255]
+    // words[1] - abytLookup(255)
+    // words[2] - =
+    // words[3] - null;
+    String typeName = words[0].substring(0, words[0].length() - 4);
+    String arraySize = words[1].substring(words[1].indexOf('(') + 1, words[1].indexOf(')'));
+    String variableName = words[1].substring(0, words[1].indexOf('('));
 
-            strLine= className+" "+varName+" = "+"new "+className+"();";
+    // Construct the equivalent Java code
+    line = typeName + "[] " + variableName + " = new " + typeName + "[" + arraySize + "];";
+}
+
+// Print the modified Java code
+System.out.println(line);
 
 
 
