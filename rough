@@ -1,47 +1,5 @@
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+VB6-
+Byte[255] abytLookup(255) =   null;
 
-public class CommentFunction {
-    public static void main(String[] args) {
-        String filePath = "path/to/your/file.java";
-        String functionName = "getLookupData";
-
-        try (BufferedReader reader = new BufferedReader(new FileReader(filePath));
-             BufferedWriter writer = new BufferedWriter(new FileWriter("path/to/your/output.java"))) {
-
-            String line;
-            boolean insideFunction = false;
-
-            while ((line = reader.readLine()) != null) {
-                if (line.contains("void " + functionName + "(")) {
-                    insideFunction = true;
-                    // Comment out the entire function using multi-line comments
-                    line = "/*" + line;
-                }
-
-                if (insideFunction && line.trim().equals("}")) {
-                    insideFunction = false;
-                    // Comment out the closing brace using multi-line comments
-                    line = line + "*/";
-                }
-
-                // Write the modified line to the new file
-                writer.write(line);
-                writer.newLine();
-            }
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-}
-
-
-
-
-
-
-returnvalue = fnGetProperty(strTagIn)..allowableCharacters;
+Java-
+Byte[255] abytLookup(255) =   null;
