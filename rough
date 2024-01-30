@@ -1,3 +1,25 @@
+if(strLine.contains("New")  && strLine.contains("null") && strLine.charAt(strLine.length()-1)!=';'){
+            String[] words = G.splitSpace(strLine);
+
+            //idx 0- New
+            //idx 1- brfFolder
+            //idx 2- =
+            //idx 3- null;
+            //idx4- cbrfBrowseFolder
+
+            String className = words[4];
+            String varName = words[1];
+
+            strLine= className+" "+varName+" = "+"new "+className+"();";
+
+
+
+
+
+
+
+
+
 String line = "Byte[255] abytLookup(255) = null;";
 
 if (line.contains("Byte[255] abytLookup(255) = null;")) {
