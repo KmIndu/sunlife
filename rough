@@ -1,3 +1,27 @@
+if (line.contains("\"CLAIMAPP\"" + ".equals(Const cstrDummyApp_UserId As String);")) {
+    line = line.replace("\"CLAIMAPP\"" + ".equals(Const cstrDummyApp_UserId As String);", "final String cstrDummyApp_UserId = \"CLAIMAPP\";");
+}
+
+if (line.contains("\"CLAIMAPP\"" + ".equals(Const cstrDummyApp_Password As String);")) {
+    line = line.replace("\"CLAIMAPP\"" + ".equals(Const cstrDummyApp_Password As String);", "final String cstrDummyApp_Password = \"CLAIMAPP\";");
+}
+
+if (line.contains("Const(Const(Const(Const(clngSprocParamCount As Long == 2);")) {
+    line = line.replace("Const(Const(Const(Const(clngSprocParamCount As Long == 2);", "final long clngSprocParamCount = 2;");
+}
+
+if (line.contains("\"sp_helpuser\"" + ".equals(Const cstrSproc As String);")) {
+    line = line.replace("\"sp_helpuser\"" + ".equals(Const cstrSproc As String);", "final String cstrSproc = \"sp_helpuser\";");
+}
+
+
+
+
+
+
+
+
+
 if(line.contains("\"CLAIMAPP\"" + ".equals(Const cstrDummyApp_UserId As String);"))
 					line= line.replace("\"CLAIMAPP\"" + ".equals(Const cstrDummyApp_UserId As String);", "final String cstrDummyApp_UserId = \"CLAIMAPP\";");
 
