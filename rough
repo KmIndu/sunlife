@@ -1,4 +1,8 @@
-  if (varCheckVal < varMinVal) {
+if (line.contains("||") ) {
+					line = line.replace("||", "|");
+
+
+if (varCheckVal < varMinVal) {
                 returnvalue = varMinVal;
 
 
