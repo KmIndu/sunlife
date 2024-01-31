@@ -1,5 +1,23 @@
 VB6-
-intDigit = (intDigit - Asc("A")) \ 3 + 2
+lngMask = lngMask \ 2
+Java-
+ lngMask = lngMask \ 2;
 
+VB6-
+intIn = intIn \ 10;
+Java-
+intIn = intIn \ 10;
+
+VB6-
+intDigit = (intDigit - Asc("A")) \ 3 + 2
 Java-
 intDigit = (intDigit - Asc("A")) \ 3 + 2;
+
+
+VB6-
+strValue = Hex$( _
+        (lngRGB And &HFF&) * &H10000 Or _
+        (lngRGB And &HFF00&) Or _
+        (lngRGB And &HFF0000) \ &H10000)
+Java-
+strValue = Hex$(strValue = Hex$(strValue = Hex$(strValue = Hex$(strValue = Hex$((lngRGB && &HFF&)&H10000 || (lngRGB && &HFF00&) || (lngRGB && &HFF0000) \ &H10000);
