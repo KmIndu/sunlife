@@ -1,1 +1,6 @@
-strResult = Hex$(strResult = Hex$(strResult = Hex$(strResult = Hex$(strResult = Hex$(lngTmp);
+  if (varCheckVal < varMinVal) {
+                returnvalue = varMinVal;
+
+
+
+            }
