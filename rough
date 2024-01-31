@@ -1,3 +1,9 @@
+if (line.contains("\\") || line.matches(".*\\b\\d+\\b.*"))
+					line=line.replace('\\', '/');
+
+
+
+
 VB6-
 lngMask = lngMask \ 2
 Java-
