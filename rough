@@ -1,1 +1,4 @@
-intDigit = Asc(UCase$(chrTmp))
+Const cstrDigits As String = "IVXLCDM"
+
+"IVXLCDM"
+        .equals(Const cstrDigits As String);
