@@ -1,2 +1,10 @@
+// Assuming you have variables like returnvalue and intDigit in Java
+
+// Convert intDigit to string and trim
+String returnvalue = Integer.toString(intDigit).trim();
+
+
+
+
 strValue = Hex$(strValue = Hex$(strValue = Hex$(strValue = Hex$(strValue = Hex$((lngRGB && 0xFF&)0x10000 || (lngRGB && 0xFF00&) || (lngRGB && 0xFF0000) / 0x10000);
 returnvalue = Trim$(returnvalue = Trim$(returnvalue = Trim$(returnvalue = Trim$(returnvalue = Trim$(CStr(intDigit));
