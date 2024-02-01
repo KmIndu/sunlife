@@ -1,6 +1,1 @@
-returnvalue = Trim$(CStr(intDigit))
-
-String returnvalue = Integer.toString(intDigit).trim();
-
-
-
+intDigit = Asc(UCase$(chrTmp))
