@@ -1,1 +1,5 @@
-  intDigit = intIn Mod 10;
+if (line.contains("Mod") ) {
+					line = line.replace("Mod", "%");
+				}
+
+intDigit = intIn Mod 10;
