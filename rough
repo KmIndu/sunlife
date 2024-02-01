@@ -1,3 +1,8 @@
+line = line.replaceAll("\\((\\d+)\\)", "[$1]");
+
+
+
+
 VB6-
 ' Create the arrays
     ReDim astrOnes(1 To 19) As String
