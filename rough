@@ -1,5 +1,77 @@
-if (line.contains("Mod") ) {
-					line = line.replace("Mod", "%");
-				}
+VB6-
+' Create the arrays
+    ReDim astrOnes(1 To 19) As String
+    ReDim astrTens(1 To 9) As String
+    ReDim astrGroup(1 To 3) As String
 
-intDigit = intIn Mod 10;
+    ' Fill the arrays.
+    astrOnes(1) = "ONE"
+    astrOnes(2) = "TWO"
+    astrOnes(3) = "THREE"
+    astrOnes(4) = "FOUR"
+    astrOnes(5) = "FIVE"
+    astrOnes(6) = "SIX"
+    astrOnes(7) = "SEVEN"
+    astrOnes(8) = "EIGHT"
+    astrOnes(9) = "NINE"
+    astrOnes(10) = "TEN"
+    astrOnes(11) = "ELEVEN"
+    astrOnes(12) = "TWELVE"
+    astrOnes(13) = "THIRTEEN"
+    astrOnes(14) = "FOURTEEN"
+    astrOnes(15) = "FIFTEEN"
+    astrOnes(16) = "SIXTEEN"
+    astrOnes(17) = "SEVENTEEN"
+    astrOnes(18) = "EIGHTTEEN"
+    astrOnes(19) = "NINETEEN"
+    astrTens(1) = "TEN"
+    astrTens(2) = "TWENTY"
+    astrTens(3) = "THIRTY"
+    astrTens(4) = "FORTY"
+    astrTens(5) = "FIFTY"
+    astrTens(6) = "SIXTY"
+    astrTens(7) = "SEVENTY"
+    astrTens(8) = "EIGHTY"
+    astrTens(9) = "NINETY"
+    astrGroup(1) = "THOUSAND"
+    astrGroup(2) = "MILLION"
+    astrGroup(3) = "BILLION"
+
+Java-
+ // Create the arrays
+                    G.redimPreserve(1 To 19,  );
+                    G.redimPreserve(1 To 9,  );
+                    G.redimPreserve(1 To 3,  );
+        
+                    // Fill the arrays.
+                    astrOnes(1) = "ONE";
+                    astrOnes(2) = "TWO";
+                    astrOnes(3) = "THREE";
+                    astrOnes(4) = "FOUR";
+                    astrOnes(5) = "FIVE";
+                    astrOnes(6) = "SIX";
+                    astrOnes(7) = "SEVEN";
+                    astrOnes(8) = "EIGHT";
+                    astrOnes(9) = "NINE";
+                    astrOnes(10) = "TEN";
+                    astrOnes(11) = "ELEVEN";
+                    astrOnes(12) = "TWELVE";
+                    astrOnes(13) = "THIRTEEN";
+                    astrOnes(14) = "FOURTEEN";
+                    astrOnes(15) = "FIFTEEN";
+                    astrOnes(16) = "SIXTEEN";
+                    astrOnes(17) = "SEVENTEEN";
+                    astrOnes(18) = "EIGHTTEEN";
+                    astrOnes(19) = "NINETEEN";
+                    astrTens(1) = "TEN";
+                    astrTens(2) = "TWENTY";
+                    astrTens(3) = "THIRTY";
+                    astrTens(4) = "FORTY";
+                    astrTens(5) = "FIFTY";
+                    astrTens(6) = "SIXTY";
+                    astrTens(7) = "SEVENTY";
+                    astrTens(8) = "EIGHTY";
+                    astrTens(9) = "NINETY";
+                    astrGroup(1) = "THOUSAND";
+                    astrGroup(2) = "MILLION";
+                    astrGroup(3) = "BILLION";
