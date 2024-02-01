@@ -1,10 +1,4 @@
-if (line.contains("||") ) {
-					line = line.replace("||", "|");
-
-
-if (varCheckVal < varMinVal) {
-                returnvalue = varMinVal;
-
-
-
-            }
+chrTmp = strIn.substring(chrTmp = strIn.substring(chrTmp = strIn.substring(chrTmp = strIn.substring(chrTmp = strIn.substring(intCounter,1);
+strCurrFormat = Format$(strCurrFormat = Format$(strCurrFormat = Format$(strCurrFormat = Format$(strCurrFormat = Format$(dblAmount,"#,###.00");
+strResult = Hex$(strResult = Hex$(strResult = Hex$(strResult = Hex$(strResult = Hex$(lngTmp);
+intLen = Trim$(intLen = Trim$(intLen = Trim$(intLen = Trim$(intLen = Trim$(strNum).length();
