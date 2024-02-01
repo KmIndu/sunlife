@@ -1,3 +1,11 @@
+// Assuming you have a variable like lngRGB in Java
+
+// Combine the bytes using bitwise operations and format as hexadecimal
+String strValue = String.format("%06X", ((lngRGB & 0xFF) * 0x10000) | (lngRGB & 0xFF00) | ((lngRGB & 0xFF0000) / 0x10000));
+
+
+
+
 strValue = Hex$( _
         (lngRGB And &HFF&) * &H10000 Or _
         (lngRGB And &HFF00&) Or _
