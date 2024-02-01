@@ -1,3 +1,11 @@
+// Assuming you have a variable like lngRGB in Java
+
+// Combine the bytes using bitwise operations and format as hexadecimal
+String strValue = String.format("%06X", (lngRGB & 0xFF) + ((lngRGB & 0xFF00) << 8) + ((lngRGB & 0xFF0000) >> 8));
+
+
+
+
 // Assuming you have variables like returnvalue and intDigit in Java
 
 // Convert intDigit to string and trim
