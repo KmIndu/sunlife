@@ -1,3 +1,8 @@
+strValue = Hex$( _
+        (lngRGB And &HFF&) * &H10000 Or _
+        (lngRGB And &HFF00&) Or _
+        (lngRGB And &HFF0000) \ &H10000)
+
 strValue = Hex$(strValue = Hex$(strValue = Hex$(strValue = Hex$(strValue = Hex$((lngRGB && 0xFF&)0x10000 | (lngRGB && 0xFF00&) | (lngRGB && 0xFF0000) / 0x10000);
 
 
