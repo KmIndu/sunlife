@@ -1,4 +1,4 @@
-returnvalue = Trim$(returnvalue = Trim$(returnvalue = Trim$(returnvalue = Trim$(returnvalue = Trim$(CStr(intDigit));
+returnvalue = Trim$(CStr(intDigit))
 
 String returnvalue = Integer.toString(intDigit).trim();
 
