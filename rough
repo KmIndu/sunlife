@@ -1,4 +1,6 @@
-Const cstrDigits As String = "IVXLCDM"
-
-"IVXLCDM"
-        .equals(Const cstrDigits As String);
+if(line.contains("astrOnes(") || line.contains("astrTens(") || line.contains("astrGroup("))
+				{
+					line=line.replace("astrOnes(*)", "astrOnes[*]")
+							.replace("astrTens(*)", "astrTens[*]")
+							.replace("astrGroup(*)", "astrGroup[*]");
+				}
