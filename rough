@@ -4,3 +4,19 @@ if(line.contains("astrOnes(") || line.contains("astrTens(") || line.contains("as
 							.replace("astrTens(*)", "astrTens[*]")
 							.replace("astrGroup(*)", "astrGroup[*]");
 				}
+
+
+switch (strLast) {
+        case  "A" To "I":
+        intSign = 1;
+        intLast = (int)(strLast) - 65 + 1;
+
+        case  "J" To "R":
+        intSign = -1;
+        intLast = (int)(strLast) - 74 + 1;
+
+        case  "{":
+        intSign = 1;
+
+        case  "}":
+        intSign = -1;
