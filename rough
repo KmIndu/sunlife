@@ -1,5 +1,4 @@
- Const cstrDelimiter As String = ":\"
-
-
-" "":\\""
-      .equals(Const cstrDelimiter As String);"
+if (line.contains(":\\") || line.contains(".equals(Const cstrDelimiter As String);")) {
+					line=line.replace(":\\", "");
+					line = line.replace(".equals(Const cstrDelimiter As String);", "final String cstrDelimiter = ":\\;");
+				}
