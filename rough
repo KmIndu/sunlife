@@ -1,3 +1,23 @@
+// Assuming 'line' is the VB6 code line
+if (line.contains("Case \"") && line.contains("To \"")) {
+    // Extract the letter range from the line
+    String range = line.substring(line.indexOf("Case \"") + 7, line.indexOf("\" To"));
+    char startChar = range.charAt(0);
+    char endChar = range.charAt(range.length() - 1);
+
+    // Replace VB6 Case range with individual Java cases
+    StringBuilder javaCases = new StringBuilder();
+    for (char currentChar = startChar; currentChar <= endChar; currentChar++) {
+        javaCases.append("case \"").append(currentChar).append("\":\n");
+    }
+
+    // Replace the original line with Java cases
+    line = javaCases.toString();
+}
+
+
+
+
 VB6-
 Dim intLen As Integer
     Dim intSign As Integer
