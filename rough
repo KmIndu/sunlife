@@ -1,3 +1,35 @@
+VB6-
+Dim intLen As Integer
+    Dim intSign As Integer
+    Dim dblOut As Double
+    Dim strLast As String * 1
+    Dim intLast As Integer
+' Decide how to convert the last character
+    Select Case strLast
+        Case "A" To "I"
+            intSign = 1
+            intLast = Asc(strLast) - 65 + 1
+        Case "J" To "R"
+            intSign = -1
+            intLast = Asc(strLast) - 74 + 1
+        Case "{"
+            intSign = 1
+        Case "}"
+            intSign = -1
+        Case Else
+            intSign = 1
+            intLast = 9
+            strNum = "9999999999999"
+    End Select
+
+
+
+Java-
+int intLen = 0;
+        int intSign = 0;
+        double dblOut = 0;
+        String strLast = ""; * 1
+        int intLast = 0;
 switch (strLast) {
         case  "A" To "I":
         intSign = 1;
