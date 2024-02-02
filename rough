@@ -1,4 +1,28 @@
 // Assuming 'line' is the VB6 code line
+if (line.matches(".*case \\\"\\w+\\\"\" To .*")) {  // Improved regular expression
+    // Extract the letter range using the capture group
+    String range = line.replaceFirst(".*case \\\"\\(\\w+)\\\"\" To .*", "$1");
+
+    if (!range.isEmpty()) {
+        // Build Java cases using a StringBuilder
+        StringBuilder javaCases = new StringBuilder();
+        for (char currentChar = range.charAt(0); currentChar <= range.charAt(range.length() - 1); currentChar++) {
+            javaCases.append("case \"").append(currentChar).append("\":\n");
+        }
+
+        // Replace the entire 'Case' statement, handling potential quotes
+        line = line.replaceFirst("case \\\"\\w+\\\"\" To .*", javaCases.toString());
+
+        // Remove the trailing colon from the last case
+        line = line.replaceFirst(":\\s*$", "");
+    }
+}
+
+
+
+
+
+// Assuming 'line' is the VB6 code line
 if (line.contains("case \"") && (line.contains("\" To \"") || line.contains("\" To"))) {
     // Extract the letter range from the line using a regular expression
     String range = line.replaceFirst("case \"\\\"(.*?)\\\"\" To.*", "$1");
