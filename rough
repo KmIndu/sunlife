@@ -1,4 +1,24 @@
 // Assuming 'line' is the VB6 code line
+if (line.matches(".*Case \"([A-Z])\" To \"([A-Z])\".*")) {
+    // Extract the start and end characters using capture groups
+    String startChar = line.replaceFirst(".*Case \"([A-Z])\" To \"([A-Z])\".*", "$1");
+    String endChar = line.replaceFirst(".*Case \"([A-Z])\" To \"([A-Z])\".*", "$2");
+
+    if (startChar.length() == 1 && endChar.length() == 1) {
+        // Build Java cases using a StringBuilder
+        StringBuilder javaCases = new StringBuilder();
+        for (char currentChar = startChar.charAt(0); currentChar <= endChar.charAt(0); currentChar++) {
+            javaCases.append("case \"").append(currentChar).append("\":\n");
+        }
+
+        // Replace the 'Case' statement with Java cases and remove trailing colon
+        line = line.replaceFirst("Case \"[A-Z]\" To \"[A-Z]\"", javaCases.toString()).replaceFirst(":\\s*$", "");
+    }
+}
+
+
+
+// Assuming 'line' is the VB6 code line
 if (line.matches(".*Case \\\"\\w\\\" To \\\"\\w\\\".*")) {
     // Extract the start and end characters using capture groups
     String startChar = line.replaceFirst(".*Case \\\"(\\w)\\\" To \\\"(\\w)\\\".*", "$1");
