@@ -1,3 +1,9 @@
+if (line.contains("Case \"A\" To \"I\"")) {
+    // Replace VB6 Case with Java case
+    line = line.replace("Case \"A\" To \"I\"", "case \"A\":\ncase \"B\":\ncase \"C\":\n//... Repeat for each letter");
+} else if (line.contains("Case \"J\" To \"R\"")) {
+    // Replace VB6 Case with Java case
+    line = line.replace("Case \"J\" To \"R\"", "case \"J\":\ncase \"K\":\n//... Repeat for each letter");
 // Assuming 'line' is the VB6 code line
 if (line.matches(".*case \\\"\\w+\\\" To .*")) {
     // Extract the letter range using the capture group
