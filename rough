@@ -1,4 +1,12 @@
 if (line.contains("astrOnes(") || line.contains("astrTens(") || line.contains("astrGroup(")) {
+    line = line.replaceAll("(astrOnes\\()([^)]*)(\\))", "$1*$3")
+               .replaceAll("(astrTens\\()([^)]*)(\\))", "$1*$3")
+               .replaceAll("(astrGroup\\()([^)]*)(\\))", "$1*$3");
+}
+
+
+
+if (line.contains("astrOnes(") || line.contains("astrTens(") || line.contains("astrGroup(")) {
     line = line.replaceAll("astrOnes\\([^)]*\\)", "astrOnes[*]")
                .replaceAll("astrTens\\([^)]*\\)", "astrTens[*]")
                .replaceAll("astrGroup\\([^)]*\\)", "astrGroup[*]");
