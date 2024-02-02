@@ -1,2 +1,5 @@
+ Const cstrDelimiter As String = ":\"
+
+
 " "":\\""
       .equals(Const cstrDelimiter As String);"
