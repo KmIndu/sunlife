@@ -1,4 +1,1 @@
-if (line.contains(":\\") || line.contains(".equals(Const cstrDelimiter As String);")) {
-					line=line.replace(":\\", "");
-					line = line.replace(".equals(Const cstrDelimiter As String);", "final String cstrDelimiter = ":\\;");
-				}
+I will always try my best to complete all the assigned tasks on time. I am open to learn and explore more technologies so that I can contribute 100  in my team as a Developer. Thank you for such an valuable feedback.
